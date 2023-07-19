@@ -2,6 +2,7 @@
   "name": "js13k-webpack-typescript-party",
   "version": "2.0.0",
   "license": "MIT",
+  "type": "module",
   "scripts": {
     "start": "webpack serve --config webpack.dev.js",
     "build": "webpack --config webpack.prod.js",

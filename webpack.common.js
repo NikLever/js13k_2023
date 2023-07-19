@@ -15,11 +15,6 @@ module.exports = {
 				exclude: /node_modules/
 			},
 			{
-				test: /\.svg$/,
-				use: "svg-inline-loader",
-				exclude: /node_modules/
-			},
-			{
 				test: /\.(png|jpg|gif|wav)$/i,
 				type: "asset/inline",
 			},
