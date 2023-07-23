@@ -4,10 +4,10 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "start": "webpack serve --config webpack.dev.js",
-    "build": "webpack --config webpack.prod.js",
-    "check-file-size": "yarn node ./scripts/check-file-size.js",
-    "build-zipped": "yarn run build && yarn node ./scripts/zip-file.js",
+    "start": "webpack serve --config webpack.dev.cjs",
+    "build": "webpack --config webpack.prod.cjs",
+    "check-file-size": "yarn node ./scripts/check-file-size.cjs",
+    "build-zipped": "yarn run build && yarn node ./scripts/zip-file.cjs",
     "party": "yarn run build-zipped && yarn run check-file-size"
   },
   "devDependencies": {

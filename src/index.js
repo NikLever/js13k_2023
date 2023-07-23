@@ -1,4 +1,7 @@
 import { VRButton } from './VRButton.js';
+import { SPWorld } from './SimplePhysics/SPWorld.js';
+import { SPBody } from './SimplePhysics/SPBody.js';
+import { SPSphereCollider, SPPlaneCollider, SPAABBCollider } from './SimplePhysics/SPCollider.js';
 
 class App{
 	constructor(){
@@ -32,6 +35,7 @@ class App{
         this.origin = new THREE.Vector3();
         
         this.initScene();
+        this.initPhysics();
         this.setupVR();
         
         window.addEventListener('resize', this.resize.bind(this) );
@@ -52,6 +56,7 @@ class App{
 		const ground = new THREE.Mesh( new THREE.PlaneGeometry( 200, 200 ), new THREE.MeshPhongMaterial( { color: 0x999999, depthWrite: false } ) );
 		ground.rotation.x = - Math.PI / 2;
 		this.scene.add( ground );
+        this.ground = ground;
 
 		var grid = new THREE.GridHelper( 200, 40, 0x000000, 0x000000 );
 		grid.material.opacity = 0.2;
@@ -78,8 +83,22 @@ class App{
             }
         }
         
+        const geometry2 = new THREE.SphereGeometry( 0.5, 20, 12 );
+        const material2 = new THREE.MeshPhongMaterial( { color: 0xFF0000 });
+        this.ball = new THREE.Mesh( geometry2, material2 );
+        this.ball.position.set( 0, 5, 3 );
+        this.scene.add( this.ball );
+
     } 
     
+    initPhysics(){
+        this.world = new SPWorld();
+        const body = new SPBody( this.ball, new SPSphereCollider(0.5), 1 ); 
+        this.world.addBody( body );
+        const ground = new SPBody( this.ground, new SPPlaneCollider( ) );
+        this.world.addBody( ground );
+    }
+
     setupVR(){
         this.renderer.xr.enabled = true;
         
@@ -252,6 +271,7 @@ class App{
 	render( ) {  
         const dt = this.clock.getDelta();
         if (this.controllers ) this.controllers.forEach( (obj) => this.handleController( obj.controller, dt ) );
+        if (this.world) this.world.step(dt);
         this.renderer.render( this.scene, this.camera );
     }
 }
