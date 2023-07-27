@@ -82,21 +82,68 @@ class App{
                 this.colliders.push(box);
             }
         }
-        
-        const geometry2 = new THREE.SphereGeometry( 0.5, 20, 12 );
-        const material2 = new THREE.MeshPhongMaterial( { color: 0xFF0000 });
-        this.ball = new THREE.Mesh( geometry2, material2 );
-        this.ball.position.set( 0, 5, 3 );
-        this.scene.add( this.ball );
-
     } 
     
+    createWalls(){
+        const width = 1;
+        const height = 3;
+        const depth = 3;
+        const geometry = new THREE.BoxGeometry( width, height, depth );
+        const material = new THREE.MeshPhongMaterial( { color: 0x00FF00 });
+
+        const leftwall = new THREE.Mesh( geometry, material );
+        leftwall.position.set( -3, height/2, 3 );
+        this.scene.add( leftwall );
+        const body1 = new SPBody( leftwall, new SPAABBCollider(new THREE.Vector3(-width/2, -height/2, -depth/2), 
+                                        new THREE.Vector3(width/2, height/2, depth/2) )); 
+        this.world.addBody( body1 );
+
+        const rightwall = new THREE.Mesh( geometry, material );
+        rightwall.position.set( 3, height/2, 3 );
+        this.scene.add( rightwall );
+        const body2 = new SPBody( rightwall, new SPAABBCollider(new THREE.Vector3(-width/2, -height/2, -depth/2), 
+                                        new THREE.Vector3(width/2, height/2, depth/2) )); 
+        this.world.addBody( body2 );
+
+        const backwall = new THREE.Mesh( geometry, material );
+        backwall.position.set( 0, height/2, 3-depth/2 );
+        backwall.scale.set(1, 1, 2);
+        backwall.rotateY( Math.PI/2 );
+        this.scene.add( backwall );
+        const body3 = new SPBody( backwall, new SPAABBCollider(new THREE.Vector3(-depth, -height/2, -width/2), 
+                                        new THREE.Vector3(depth, height/2, width/2) ));  
+        this.world.addBody( body3 );
+
+        /*const floor = new THREE.Mesh( geometry, material );
+        floor.position.set( 0, 0, 3);
+        floor.rotateZ( Math.PI/2 );
+        this.scene.add( floor );
+        const body4 = new SPBody( floor, new SPAABBCollider(new THREE.Vector3(-depth/2, -0.5, -height/2), 
+                                        new THREE.Vector3(depth/2, 0.5, height/2) ));  
+        this.world.addBody( body4 );*/
+    }
+
+    createBall(){
+        const geometry = new THREE.SphereGeometry( 0.5, 20, 12 );
+        const material = new THREE.MeshPhongMaterial( { color: 0xFF0000 });
+        const ball = new THREE.Mesh( geometry, material );
+        ball.position.set( Math.random()*2-1, 5, 3+Math.random()*2-1 );
+        this.scene.add( ball );
+        const body = new SPBody( ball, new SPSphereCollider(0.5), 1 ); 
+        //body.velocity.z = -5;
+        this.world.addBody( body );
+        this.ballcount++;
+        if (this.ballcount==20) clearInterval(this.timeout);
+    }
+
     initPhysics(){
         this.world = new SPWorld();
-        const body = new SPBody( this.ball, new SPSphereCollider(0.5), 1 ); 
-        this.world.addBody( body );
+        this.timeout = setInterval( this.createBall.bind(this), 1000);
+        //this.createBall();
+        this.ballcount = 0;
         const ground = new SPBody( this.ground, new SPPlaneCollider( ) );
         this.world.addBody( ground );
+        this.createWalls();
     }
 
     setupVR(){
