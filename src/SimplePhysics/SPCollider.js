@@ -65,6 +65,14 @@ class SPAABBCollider{
         }
     }
 
+    closetPoint( spherePos, aabbPos, radius ){
+        const normal = aabbPos.clone().sub( spherePos );
+
+        const pt = normal.clamp( this.min, this.max );
+
+        return pt;
+    }
+
     whichDirection( normal ){
         let max = 0.0;
         let best_match = -1;

@@ -29,7 +29,9 @@ class SPWorld{
 
             this.bodies.forEach( body => {
                 if (body.mass!=0 && body.collider!=null && body.collider.type==SPCOLLIDERTYPES.SPHERE){
-                    const prevpos = body.position.clone();
+                    const pos = body.position.clone();
+                    const vel = body.velocity.clone();
+                    const log = [];
                     //Move
                     body.position.add( body.velocity.clone().multiplyScalar( deltaTime ) );
 
@@ -37,6 +39,7 @@ class SPWorld{
                     if ( body.position.y < body.collider.radius ) {
                         body.position.y = body.collider.radius;
                         body.velocity.y = -body.velocity.y * body.restitution;
+                        log.push( 'ground hit' );
                     }
 
                     //Collision check and resolve colliders
@@ -57,6 +60,7 @@ class SPWorld{
                                     normal.multiplyScalar( normal.dot( relativeVelocity, normal ) );
                         
                                     body.velocity.sub(normal);
+                                    log.push( 'sphere hit' );
                                 }
                                 break;
                             case SPCOLLIDERTYPES.AABB:
@@ -73,34 +77,34 @@ class SPWorld{
                                     //RIGHT 0, LEFT 1, UP 2, DOWN 3, IN 4, OUT 5
                                     switch(dir){
                                     case 0://RIGHT
-                                        //console.log("AABB collision>min.x");
+                                        log.push("AABB collision>min.x");
                                         body.position.x = min.x - body.collider.radius;
                                         body.velocity.x = -body.velocity.x * body.restitution;
                                         break;
                                     case 1://LEFT
-                                        //console.log("AABB collision<max.x");
+                                        log.push("AABB collision<max.x");
                                         body.position.x = max.x + body.collider.radius;
                                         body.velocity.x = -body.velocity.x * body.restitution;
                                         break;
                                     case 2://UP
-                                        //console.log("AABB collision>min.y");
+                                        log.push("AABB collision>min.y");
                                         if (min.y - body.collider.radius >= 0){
                                             body.position.y = min.y - body.collider.radius;
                                             body.velocity.y = -body.velocity.y * body.restitution;
                                         }
                                         break;
                                     case 3://DOWN
-                                        //console.log("AABB collision<max.y");
+                                        log.push("AABB collision<max.y");
                                         body.position.y = max.y + body.collider.radius;
                                         body.velocity.y = -body.velocity.y * body.restitution;
                                         break;
                                     case 4://IN
-                                        //console.log("AABB collision>min.z");
+                                        log.push("AABB collision>min.z");
                                         body.position.z = min.z - body.collider.radius;
                                         body.velocity.z = -body.velocity.z * body.restitution;
                                         break;
                                     case 5://OUT
-                                        //console.log("AABB collision<max.z");
+                                        log.push("AABB collision<max.z");
                                         body.position.z = max.z + body.collider.radius;
                                         body.velocity.z = -body.velocity.z * body.restitution;
                                         break;
@@ -110,9 +114,10 @@ class SPWorld{
                             }
                         }
 
-                        if ( body.position.distanceTo( prevpos ) > 2){
-                            console.log('Big move');
-                            body.position.copy(prevpos);
+                        if ( body.position.distanceTo( pos ) > 2){
+                            console.log('Big move\n'+ log.join("\n"));
+                            body.position.copy(pos);
+                            //body.velocity.copy(vel);
                         }    
                     }
                 
