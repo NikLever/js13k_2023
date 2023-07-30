@@ -19,6 +19,10 @@ module.exports = {
 				type: "asset/inline",
 			},
 			{
+				test: /\.(mp3)$/i,
+				type: 'asset/resource',
+			},
+			{
 				test: /\.glsl$/i,
 				use: "raw-loader"
 			}

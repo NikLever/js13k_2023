@@ -26,6 +26,7 @@ class SPWorld{
 
         for( let i=0; i<this.substeps; i++){
             let index = 0;
+            let collision = false;
 
             this.bodies.forEach( body => {
                 if (body.mass!=0 && body.collider!=null && body.collider.type==SPCOLLIDERTYPES.SPHERE){
@@ -39,7 +40,7 @@ class SPWorld{
                     if ( body.position.y < body.collider.radius ) {
                         body.position.y = body.collider.radius;
                         body.velocity.y = -body.velocity.y * body.restitution;
-                        log.push( 'ground hit' );
+                        //log.push( 'ground hit' );
                     }
 
                     //Collision check and resolve colliders
@@ -60,20 +61,37 @@ class SPWorld{
                                     normal.multiplyScalar( normal.dot( relativeVelocity, normal ) );
                         
                                     body.velocity.sub(normal);
-                                    log.push( 'sphere hit' );
+                                    //log.push( 'sphere hit' );
                                 }
                                 break;
                             case SPCOLLIDERTYPES.AABB:
                                 //min-max in world space
                                 const min = body2.collider.min.clone().add(body2.position);
                                 const max = body2.collider.max.clone().add(body2.position);
+                                const magnitude = body.velocity.length();
+                                const slop = 0;// magnitude/20;
 
                                 if ( body2.collider.testSphereCollision(min, max, body.position, body.collider.radius)){
-                                    const normal = new THREE.Vector3(0,1,0);
+                                    //There is an intersection
+                                    const pt = body2.collider.closestPoint( body.position, body2.position );
+                                    const normal = body.position.clone().sub(pt).normalize();
+                                    const offset = normal.clone().multiplyScalar(body.collider.radius + slop);
+                                    body.position = pt.clone().add(offset);
+                        
+                                    /*const relativeVelocity = body.velocity.clone().sub(body2.velocity);
+                                    normal.multiplyScalar( normal.dot( relativeVelocity, normal ) ).negate();
+                                    body.velocity.sub(normal);//.normalize().multiplyScalar(magnitude * body.restitution );
+                                    console.log(`SPWorld.step aabb collision posY${body.position.y.toFixed(2)} velY${body.velocity.y.toFixed(2)}`);*/
+                                    
+                                    //collision = true;
+                                    //body.position.add(body.velocity.clone().multiplyScalar(deltaTime));
+                                    //log.push( 'aabb hit' );
+
+                                    /*const normal = new THREE.Vector3(0,1,0);
                                     if (body.velocity.length() > 0.001){
                                         normal.copy(body.velocity).normalize();
-                                    }
-                                    const dir = body2.collider.whichDirection( normal );
+                                    }*/
+                                    const dir = body2.collider.whichDirection( normal.negate() );
                                     //RIGHT 0, LEFT 1, UP 2, DOWN 3, IN 4, OUT 5
                                     switch(dir){
                                     case 0://RIGHT
@@ -88,10 +106,10 @@ class SPWorld{
                                         break;
                                     case 2://UP
                                         log.push("AABB collision>min.y");
-                                        if (min.y - body.collider.radius >= 0){
+                                        //if (min.y - body.collider.radius >= 0){
                                             body.position.y = min.y - body.collider.radius;
                                             body.velocity.y = -body.velocity.y * body.restitution;
-                                        }
+                                        //}
                                         break;
                                     case 3://DOWN
                                         log.push("AABB collision<max.y");
@@ -109,19 +127,23 @@ class SPWorld{
                                         body.velocity.z = -body.velocity.z * body.restitution;
                                         break;
                                     }
+
+                                    if (body.sfx) body.playSfx();
                                 }
+
+                                
                                 break;
                             }
                         }
 
                         if ( body.position.distanceTo( pos ) > 2){
-                            console.log('Big move\n'+ log.join("\n"));
-                            body.position.copy(pos);
+                            //console.log('Big move\n'+ log.join("\n"));
+                            //body.position.copy(pos);
                             //body.velocity.copy(vel);
                         }    
                     }
                 
-                    body.velocity.multiplyScalar( body.damping ).add( this.gravity.clone().multiplyScalar( deltaTime ) );
+                    if (!collision) body.velocity.multiplyScalar( body.damping ).add( this.gravity.clone().multiplyScalar( deltaTime ) );
 
                     if (body.mesh){
                         body.mesh.position.copy( body.position );

@@ -65,10 +65,16 @@ class SPAABBCollider{
         }
     }
 
-    closetPoint( spherePos, aabbPos, radius ){
-        const normal = aabbPos.clone().sub( spherePos );
+    closestPoint( spherePos, aabbPos, radius=0.5, worldSpace=true ){
+        //const normal = aabbPos.clone().sub( spherePos ).normalize();
+        //const pt1 = normal.multiplyScalar(radius);
 
-        const pt = normal.clamp( this.min, this.max );
+        //const pt = pt1.clamp( this.min, this.max );
+
+        const normal = spherePos.clone().sub( aabbPos );
+        const pt = normal.clamp( this.min, this.max )
+        
+        if (worldSpace) pt.add(aabbPos);
 
         return pt;
     }

@@ -12,8 +12,7 @@
   <script type="importmap">
     {
       "imports": {
-        "three": "https://unpkg.com/three@0.154.0/build/three.module.js",
-        "three/addons/": "https://unpkg.com/three@0.154.0/examples/jsm/"
+        "three": "https://unpkg.com/three@0.154.0/build/three.module.js"
       }
     }
   </script>
@@ -29,8 +28,19 @@
         margin: 0;
         padding: 0;
       }
+
+      #startBtn{
+        position: absolute;
+        bottom: 30px;
+        width: 100px;
+        height: 50px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+      }
     </style>
   </head>
   <body>
+    <button id="startBtn">Start</button>
   </body>
 </html>
