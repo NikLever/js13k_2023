@@ -78,19 +78,8 @@ class SPWorld{
                                     const offset = normal.clone().multiplyScalar(body.collider.radius + slop);
                                     body.position = pt.clone().add(offset);
                         
-                                    /*const relativeVelocity = body.velocity.clone().sub(body2.velocity);
-                                    normal.multiplyScalar( normal.dot( relativeVelocity, normal ) ).negate();
-                                    body.velocity.sub(normal);//.normalize().multiplyScalar(magnitude * body.restitution );
-                                    console.log(`SPWorld.step aabb collision posY${body.position.y.toFixed(2)} velY${body.velocity.y.toFixed(2)}`);*/
+                                    if (body.onCollision) body.onCollision();
                                     
-                                    //collision = true;
-                                    //body.position.add(body.velocity.clone().multiplyScalar(deltaTime));
-                                    //log.push( 'aabb hit' );
-
-                                    /*const normal = new THREE.Vector3(0,1,0);
-                                    if (body.velocity.length() > 0.001){
-                                        normal.copy(body.velocity).normalize();
-                                    }*/
                                     const dir = body2.collider.whichDirection( normal.negate() );
                                     //RIGHT 0, LEFT 1, UP 2, DOWN 3, IN 4, OUT 5
                                     switch(dir){

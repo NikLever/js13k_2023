@@ -1,13 +1,10 @@
 import { SPWorld } from './SimplePhysics/SPWorld.js';
 import { SPBody } from './SimplePhysics/SPBody.js';
 import { SPSphereCollider, SPPlaneCollider, SPAABBCollider } from './SimplePhysics/SPCollider.js';
-//import { OrbitControls } from './OrbitControls.js';
+import { OrbitControls } from './OrbitControls.js';
 import { CanvasUI } from './CanvasUI.js';
-import { VRButton } from './VRButton.js';
-import { JoyStick } from './JoyStick.js';
-import { CollisionEffect } from './CollisionEffect.js';
 import ballSfx from "../assets/ball.wav";
-//import clickSfx from "../assets/click.wav";
+import clickSfx from "../assets/click.wav";
 
 class App{
 	constructor(){
@@ -17,8 +14,7 @@ class App{
         this.clock = new THREE.Clock();
         
 		this.camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.1, 200 );
-		this.camera.position.set( 5.3, 10.5, 20 );
-        this.camera.quaternion.set( -0.231, 0.126, 0.03, 0.964);
+		this.camera.position.set( 0, 1.6, 5 );
         
 		this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color( 0x505050 );
@@ -35,22 +31,10 @@ class App{
         
 		container.appendChild( this.renderer.domElement );
 
-        //this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         
         this.initScene();
         this.initPhysics();
-
-        this.tmpVec = new THREE.Vector3();
-        this.tmpEuler = new THREE.Euler();
-        this.tmpMat4 = new THREE.Matrix4();
-
-        this.force = new THREE.Vector3();
-        this.speed = 3;
-
-        this.joystick = new JoyStick({ onMove: (up, right) => {
-            this.force.set(right, 0, -up);
-        }});
-        this.setupVR();
         
         window.addEventListener('resize', this.resize.bind(this) );
 
@@ -80,23 +64,28 @@ class App{
                 case 'KeyS':
                     if (this.world) this.world.step(this.fixedStep);
                     break;
-                case 'KeyC':
-                    console.log('Camera pos: ', this.camera.position, " quat:", this.camera.quaternion);
-                    break;
             }
             this.ball.mesh.position.copy(this.ball.position);
           }, false);
         
-        //this.state = 'initialising';
-        //const btn = document.getElementById('startBtn');
-        //btn.addEventListener('click', this.startGame.bind(this));
+        this.state = 'initialising';
+        const btn = document.getElementById('startBtn');
+        btn.addEventListener('click', this.startGame.bind(this));
 
         this.renderer.setAnimationLoop( this.render.bind(this) );
 	}	
-
+    
     startGame(){
         this.state = 'game';
-        //this.sfx.click.play();
+
+        this.ballcount = 1;
+        this.interval = setInterval( () => {
+            this.createBall();
+            this.ballcount++;
+            if (this.ballcount>50) clearInterval(this.interval);
+        }, 1000);
+
+        this.sfx.click.play();
     }
 
     random( min, max ){
@@ -119,16 +108,16 @@ class App{
 		grid.material.transparent = true;
 		this.scene.add( grid );
 
-        //this.createDot();
+        this.createDot();
 
         const listener = new THREE.AudioListener();
         this.camera.add( listener );
 
         this.sfx = {};
-        //this.sfx.click = this.loadSound(clickSfx, listener);
+        this.sfx.click = this.loadSound(clickSfx, listener);
         this.sfx.ball = this.loadSound(ballSfx, listener, 0.1);
 
-        //this.createUI();
+        this.createUI();
     } 
 
     createUI(){
@@ -198,7 +187,7 @@ class App{
         const geometry = new THREE.SphereGeometry( 0.5, 20, 12 );
         const material = new THREE.MeshPhongMaterial( { color: 0xFF0000 });
         const ball = new THREE.Mesh( geometry, material );
-        ball.position.set( 2, 0.5, 0 );
+        ball.position.set( this.random(-2, 2), 4, this.random(-2, 2) );
         this.scene.add( ball );
         const body = new SPBody( ball, new SPSphereCollider(0.5), 1 ); 
         this.world.addBody( body );
@@ -218,11 +207,7 @@ class App{
         }
         this.ball = this.createBall();
         this.ball.sfx = this.sfx.ball;
-        this.ball.onCollision = () => {
-            this.effect.reset( this.ball.position );
-        }
         this.fixedStep = 1/60;
-        this.effect = new CollisionEffect(this.scene, false);
     }
 
     resize(){
@@ -246,135 +231,10 @@ class App{
         }
     }
 
-    setupVR(){
-        this.renderer.xr.enabled = true;
-        
-        const button = new VRButton( this.renderer );
-        
-        function onSelectStart() {
-            
-            this.userData.selectPressed = true;
-        }
-
-        function onSelectEnd() {
-
-            this.userData.selectPressed = false;
-            
-        }
-
-        function onSqueezeStart() {
-            
-            this.userData.squeezePressed = true;
-        }
-
-        function onSqueezeEnd() {
-
-            this.userData.squeezePressed = false;
-            
-        }
-        
-        this.dolly = new THREE.Object3D();
-
-        this.controllers = [];
-
-        for (let i=0; i<=1; i++){
-            const controller = this.renderer.xr.getController( i );
-            controller.addEventListener( 'selectstart', onSelectStart );
-            controller.addEventListener( 'selectend', onSelectEnd );
-            controller.addEventListener( 'squeezestart', onSqueezeStart );
-            controller.addEventListener( 'squeezeend', onSqueezeEnd );
-            controller.addEventListener( 'connected', ( event ) => {
-                const mesh = this.buildController(event.data, i);
-                mesh.scale.z = 0;
-                controller.add( mesh );
-                controller.gamepad = event.data.gamepad;
-                controller.handedness = event.data.handedness;
-            } );
-            controller.addEventListener( 'disconnected',  (controller) => {
-                const grip = this.children[0];
-                if (grip){
-                    if (grip.children[0]) grip.children[0].dispose();
-                    controller.remove( grip );
-                }
-                const index = this.controllers.findIndex( (obj) => obj.controller == controller );
-                if (index>=0){
-                    this.controllers[index] = null;
-                }
-            } );
-
-            this.dolly.add( controller );
-
-            const grip = this.renderer.xr.getControllerGrip( i );
-            grip.add( this.buildGrip( ) );
-            controller.add( grip );
-
-            this.controllers.push({controller, grip});
-        }
-        
-        this.dolly.position.set(0, 5, 10);
-        this.dolly.add( this.camera );
-        this.scene.add( this.dolly );
-        
-        this.dummyCam = new THREE.Object3D();
-        this.camera.add( this.dummyCam );
-
-    }
-    
-    buildGrip(){
-        const geometry = new THREE.CylinderGeometry(0.02, 0.015, 0.12, 16, 1);
-        geometry.rotateX( -Math.PI/2 );
-        const material = new THREE.MeshStandardMaterial( { color: 0xdddddd, roughness: 1 } );
-        return new THREE.Mesh(geometry, material);
-    }
-
-    buildController( data ) {
-        let geometry, material;
-        
-        switch ( data.targetRayMode ) {
-            
-            case 'tracked-pointer':
-
-                geometry = new THREE.BufferGeometry();
-                geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( [ 0, 0, 0, 0, 0, - 1 ], 3 ) );
-                geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( [ 0.5, 0.5, 0.5, 0, 0, 0 ], 3 ) );
-
-                material = new THREE.LineBasicMaterial( { vertexColors: true, blending: THREE.AdditiveBlending } );
-
-                return new THREE.Line( geometry, material );
-
-            case 'gaze':
-
-                geometry = new THREE.RingBufferGeometry( 0.02, 0.04, 32 ).translate( 0, 0, - 1 );
-                material = new THREE.MeshBasicMaterial( { opacity: 0.5, transparent: true } );
-                return new THREE.Mesh( geometry, material );
-
-        }
-
-    }
-    
-    handleController( controller, dt ){
-        if (controller.handedness == 'right'){
-            this.force.set( controller.gamepad.axes[2], 0, controller.gamepad.axes[3] );
-        }
-    }
-
-	render( time ) {  
+	render( ) {  
         const dt = this.clock.getDelta();
-        if (this.world){
-            this.ball.velocity.add( this.force.clone().multiplyScalar(dt * this.speed) );
-            this.world.step(this.fixedStep);
-        }
-
-        if (this.renderer.xr.isPresenting){
-            this.tmpMat4.extractRotation( this.dummyCam.matrixWorld );
-            this.tmpEuler.setFromRotationMatrix(this.tmpMat4);
-            this.force.set(this.tmpEuler.z, 0, this.tmpEuler.x);
-
-            //console.log('force:', this.force, this.tmpEuler);
-        }
-
-        if ( this.effect && this.effect.visible ) this.effect.update(time, dt);
-       
+        if (this.world && this.state=='game') this.world.step(this.fixedStep);
+        if (this.dot) this.positionDot();
         this.renderer.render( this.scene, this.camera );
     }
 }

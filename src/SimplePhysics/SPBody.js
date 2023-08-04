@@ -14,6 +14,7 @@ class SPBody{
             console.warn( 'SPBody constructor: only Sphere dynamic bodies are supported' );
         }
         this.sfx = null;
+        this.onCollision = null;
     }
 
     playSfx(){
