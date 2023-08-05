@@ -89,7 +89,11 @@ class VRButton{
             currentSession.removeEventListener( 'end', onSessionEnded );
 
             self.stylizeElement( button, true, 12, true );
-            button.textContent = 'ENTER VR';
+            button.style.display = '';
+            button.style.right = '20px';
+            button.style.width = '80px';
+            button.style.cursor = 'pointer';
+            button.innerHTML = `<img src = "${svg}" alt="VR Cardboard" style="margin-left: 6px"/>`;
 
             currentSession = null;
             
@@ -140,6 +144,8 @@ class VRButton{
                 currentSession.end();
 
             }
+
+            if (self.onClick) self.onClick();
 
         };
 

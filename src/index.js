@@ -3,10 +3,10 @@ import { SPBody } from './SimplePhysics/SPBody.js';
 import { SPSphereCollider, SPPlaneCollider, SPAABBCollider } from './SimplePhysics/SPCollider.js';
 import { CanvasUI } from './CanvasUI.js';
 import { VRButton } from './VRButton.js';
-import { JoyStick } from './JoyStick.js';
+//import { JoyStick } from './JoyStick.js';
 import { CollisionEffect } from './CollisionEffect.js';
 import { Tween } from './Tween.js';
-//import ballSfx from "../assets/ball.wav";
+import ballSfx from "../assets/ball.mp3";
 
 class App{
 	constructor(){
@@ -46,15 +46,16 @@ class App{
         this.force = new THREE.Vector3();
         this.speed = 3;
         this.sfxInit = true;
+        this.useHeadsetOrientation = false;
 
-        this.joystick = new JoyStick({ onMove: (up, right) => {
+        /*this.joystick = new JoyStick({ onMove: (up, right) => {
             this.force.set(right, 0, -up);
             if (this.sfxInit){
                 this.sfx.ball.stop();
                 this.sfx.ball.play();
                 this.sfxInit = false;
             }
-        }});
+        }});*/
         this.setupVR();
         
         window.addEventListener('resize', this.resize.bind(this) );
@@ -131,7 +132,7 @@ class App{
 
         this.sfx = {};
         //this.sfx.click = this.loadSound(clickSfx, listener);
-        //this.sfx.ball = this.loadSound(ballSfx, listener, 0.1);
+        this.sfx.ball = this.loadSound(ballSfx, listener, 0.1);
 
         //this.createUI();
     } 
@@ -155,7 +156,7 @@ class App{
         this.ui = ui;
     }
     
-    /*loadSound( snd, listener, vol=0.5, loop=false ){
+    loadSound( snd, listener, vol=0.5, loop=false ){
         // create a global audio source
         const sound = new THREE.Audio( listener );
 
@@ -168,7 +169,7 @@ class App{
         });
 
         return sound;
-    }*/
+    }
 
     /*createDot(){
         const geometry = new THREE.SphereGeometry( 0.1 );
@@ -236,7 +237,7 @@ class App{
             }
         }
         this.ball = this.createBall();
-        //this.ball.sfx = this.sfx.ball;
+        this.ball.sfx = this.sfx.ball;
         this.ball.onCollision = () => {
             this.effect.reset( this.ball.position );
         }
@@ -269,8 +270,11 @@ class App{
         this.renderer.xr.enabled = true;
         
         const button = new VRButton( this.renderer );
+        button.onClick = () => {
+            this.sfx.ball.play();
+        }
         
-        function onSelectStart() {
+        /*function onSelectStart() {
             
             this.userData.selectPressed = true;
         }
@@ -290,35 +294,49 @@ class App{
 
             this.userData.squeezePressed = false;
             
-        }
+        }*/
+
+        const scope = this;
+
+        this.renderer.xr.addEventListener( 'sessionend', function ( event ) {
+            scope.dolly.position.z = 10;
+            scope.camera.position.set( 5.3, 10.5, 20 );
+            scope.camera.quaternion.set( -0.231, 0.126, 0.03, 0.964);
+            scope.camera.fov = 50;
+            scope.ball.position.set( 2.1, 0.5, 0);
+            scope.ball.velocity.set(0,0,0);
+            scope.force.set(0,0,0);
+            scope.resize();
+        } );
         
+
         this.dolly = new THREE.Object3D();
 
         this.controllers = [];
 
         for (let i=0; i<=1; i++){
             const controller = this.renderer.xr.getController( i );
-            controller.addEventListener( 'selectstart', onSelectStart );
-            controller.addEventListener( 'selectend', onSelectEnd );
-            controller.addEventListener( 'squeezestart', onSqueezeStart );
-            controller.addEventListener( 'squeezeend', onSqueezeEnd );
+            //controller.addEventListener( 'selectstart', onSelectStart );
+            //controller.addEventListener( 'selectend', onSelectEnd );
+            //controller.addEventListener( 'squeezestart', onSqueezeStart );
+            //controller.addEventListener( 'squeezeend', onSqueezeEnd );
             controller.addEventListener( 'connected', ( event ) => {
                 const mesh = this.buildController(event.data, i);
                 mesh.scale.z = 0;
                 controller.add( mesh );
                 controller.gamepad = event.data.gamepad;
                 controller.handedness = event.data.handedness;
+                console.log(`controller connected ${controller.handedness}`);
             } );
-            controller.addEventListener( 'disconnected',  (controller) => {
+            
+            controller.addEventListener( 'disconnected', function () {
                 const grip = this.children[0];
-                if (grip){
-                    if (grip.children[0]) grip.children[0].dispose();
-                    controller.remove( grip );
+                if (grip && grip.children && grip.children.length>0){
+                    if (grip.children[0].isMesh) grip.children[0].geometry.dispose();
+                    this.remove( grip );
                 }
-                const index = this.controllers.findIndex( (obj) => obj.controller == controller );
-                if (index>=0){
-                    this.controllers[index] = null;
-                }
+                scope.dolly.remove(this);
+                //this.remove( this.children[ 0 ] );
             } );
 
             this.dolly.add( controller );
@@ -374,6 +392,7 @@ class App{
     handleController( controller, dt ){
         if (controller.handedness == 'right'){
             this.force.set( controller.gamepad.axes[2], 0, controller.gamepad.axes[3] );
+            console.log(`handleController: ${controller.gamepad.axes[2].toFixed(2)},  ${controller.gamepad.axes[3].toFixed(2)}`);
         }
     }
 
@@ -385,11 +404,14 @@ class App{
         }
 
         if (this.renderer.xr.isPresenting){
-            this.tmpMat4.extractRotation( this.dummyCam.matrixWorld );
-            this.tmpEuler.setFromRotationMatrix(this.tmpMat4);
-            this.force.set(this.tmpEuler.z, 0, this.tmpEuler.x);
-
-            //console.log('force:', this.force, this.tmpEuler);
+            if (this.useHeadsetOrientation){
+                this.tmpMat4.extractRotation( this.dummyCam.matrixWorld );
+                this.tmpEuler.setFromRotationMatrix(this.tmpMat4);
+                this.force.set(-this.tmpEuler.z, 0, this.tmpEuler.x);
+            }else{
+                this.controllers.forEach( (obj) => this.handleController(obj.controller));
+            }
+            this.dolly.position.z = this.ball.position.z + 10;
         }
 
         if ( this.effect && this.effect.visible ) this.effect.update(time, dt);
