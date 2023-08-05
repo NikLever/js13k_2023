@@ -1,13 +1,12 @@
 import { SPWorld } from './SimplePhysics/SPWorld.js';
 import { SPBody } from './SimplePhysics/SPBody.js';
 import { SPSphereCollider, SPPlaneCollider, SPAABBCollider } from './SimplePhysics/SPCollider.js';
-//import { OrbitControls } from './OrbitControls.js';
 import { CanvasUI } from './CanvasUI.js';
 import { VRButton } from './VRButton.js';
 import { JoyStick } from './JoyStick.js';
 import { CollisionEffect } from './CollisionEffect.js';
-import ballSfx from "../assets/ball.wav";
-//import clickSfx from "../assets/click.wav";
+import { Tween } from './Tween.js';
+//import ballSfx from "../assets/ball.wav";
 
 class App{
 	constructor(){
@@ -35,7 +34,7 @@ class App{
         
 		container.appendChild( this.renderer.domElement );
 
-        //this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+        this.tweens = [];
         
         this.initScene();
         this.initPhysics();
@@ -46,15 +45,21 @@ class App{
 
         this.force = new THREE.Vector3();
         this.speed = 3;
+        this.sfxInit = true;
 
         this.joystick = new JoyStick({ onMove: (up, right) => {
             this.force.set(right, 0, -up);
+            if (this.sfxInit){
+                this.sfx.ball.stop();
+                this.sfx.ball.play();
+                this.sfxInit = false;
+            }
         }});
         this.setupVR();
         
         window.addEventListener('resize', this.resize.bind(this) );
 
-        document.addEventListener('keydown', (event) => {
+        /*document.addEventListener('keydown', (event) => {
             const name = event.key;
             const code = event.code;
             //console.log(`Key pressed ${name} \r\n Key code value: ${code}`);
@@ -85,7 +90,7 @@ class App{
                     break;
             }
             this.ball.mesh.position.copy(this.ball.position);
-          }, false);
+          }, false);*/
         
         //this.state = 'initialising';
         //const btn = document.getElementById('startBtn');
@@ -126,7 +131,7 @@ class App{
 
         this.sfx = {};
         //this.sfx.click = this.loadSound(clickSfx, listener);
-        this.sfx.ball = this.loadSound(ballSfx, listener, 0.1);
+        //this.sfx.ball = this.loadSound(ballSfx, listener, 0.1);
 
         //this.createUI();
     } 
@@ -150,7 +155,7 @@ class App{
         this.ui = ui;
     }
     
-    loadSound( snd, listener, vol=0.5, loop=false ){
+    /*loadSound( snd, listener, vol=0.5, loop=false ){
         // create a global audio source
         const sound = new THREE.Audio( listener );
 
@@ -163,15 +168,15 @@ class App{
         });
 
         return sound;
-    }
+    }*/
 
-    createDot(){
+    /*createDot(){
         const geometry = new THREE.SphereGeometry( 0.1 );
         const material = new THREE.MeshPhongMaterial( { color: 0x0000FF, depthTest: true });
         const dot = new THREE.Mesh( geometry, material );
         this.scene.add( dot );
         this.dot = dot;
-    }
+    }*/
 
     createAABB(pos){
         const width = 3;
@@ -190,6 +195,8 @@ class App{
 
         const body = new SPBody( box, new SPAABBCollider(new THREE.Vector3(-width/2, -height/2, -depth/2), 
                                         new THREE.Vector3(width/2, height/2, depth/2) )); 
+        body.edges = lines;
+
         this.world.addBody( body );
         return body;
     }
@@ -198,7 +205,7 @@ class App{
         const geometry = new THREE.SphereGeometry( 0.5, 20, 12 );
         const material = new THREE.MeshPhongMaterial( { color: 0xFF0000 });
         const ball = new THREE.Mesh( geometry, material );
-        ball.position.set( 2, 0.5, 0 );
+        ball.position.set( 2.1, 0.5, 0 );
         this.scene.add( ball );
         const body = new SPBody( ball, new SPSphereCollider(0.5), 1 ); 
         this.world.addBody( body );
@@ -209,6 +216,18 @@ class App{
         this.world = new SPWorld();
         const pos = new THREE.Vector3();
         this.aabb = this.createAABB(pos);
+
+        this.tweens.push(new Tween(this.aabb.mesh.scale, 'x', 0, 2.0, onComplete.bind(this)));
+        this.tweens.push(new Tween(this.aabb.edges.scale, 'x', 0, 2.0, onComplete.bind(this)));
+
+        function onComplete(tween){
+            const index = this.tweens.indexOf(tween);
+            if (index >= 0) this.tweens.splice(index, 1);
+            this.aabb.mesh.visible = false;
+            this.aabb.edges.visible = false;
+            this.aabb.active = false;
+        }
+
         for(let x=-5; x<=5; x+=5){
             for(let z=-5; z<=5; z+=5){
                 if (x==0 && z==0) continue;
@@ -217,7 +236,7 @@ class App{
             }
         }
         this.ball = this.createBall();
-        this.ball.sfx = this.sfx.ball;
+        //this.ball.sfx = this.sfx.ball;
         this.ball.onCollision = () => {
             this.effect.reset( this.ball.position );
         }
@@ -231,7 +250,7 @@ class App{
         this.renderer.setSize( window.innerWidth, window.innerHeight );  
     }
     
-    positionDot(){
+    /*positionDot(){
         const pt = this.aabb.collider.closestPoint( this.ball.position, this.aabb.position );
         if (pt){
             this.dot.position.copy(pt);
@@ -244,7 +263,7 @@ class App{
             normal.normalize().negate().multiplyScalar(this.ball.collider.radius);
             this.ball.position = pt.clone().add(normal);
         }
-    }
+    }*/
 
     setupVR(){
         this.renderer.xr.enabled = true;
@@ -374,6 +393,9 @@ class App{
         }
 
         if ( this.effect && this.effect.visible ) this.effect.update(time, dt);
+        if ( this.tweens && this.tweens.length > 0){
+            this.tweens.forEach( tween => tween.update(dt) );
+        }
        
         this.renderer.render( this.scene, this.camera );
     }

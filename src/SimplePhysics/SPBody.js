@@ -9,6 +9,7 @@ class SPBody{
         this.damping = 0.99;
         this.restitution = 0.9;
         this.collider = collider;
+        this.active = true;
         this.mesh = mesh;
         if (mass>0 && collider.type != SPCOLLIDERTYPES.SPHERE){
             console.warn( 'SPBody constructor: only Sphere dynamic bodies are supported' );
