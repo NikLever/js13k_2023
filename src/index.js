@@ -1,12 +1,13 @@
 import { SPWorld } from './SimplePhysics/SPWorld.js';
 import { SPBody } from './SimplePhysics/SPBody.js';
 import { SPSphereCollider, SPPlaneCollider, SPAABBCollider } from './SimplePhysics/SPCollider.js';
-import { CanvasUI } from './CanvasUI.js';
+import { BasicUI } from './BasicUI.js';
 import { VRButton } from './VRButton.js';
 //import { JoyStick } from './JoyStick.js';
 import { CollisionEffect } from './CollisionEffect.js';
 import { Tween } from './Tween.js';
-import ballSfx from "../assets/ball.mp3";
+import { Tree, Rock, RockFace } from './Models.js';
+import ballSfx from "../assets/ball1.mp3";
 
 class App{
 	constructor(){
@@ -16,6 +17,8 @@ class App{
         this.clock = new THREE.Clock();
         
 		this.camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.1, 200 );
+        this.createUI();
+
 		this.camera.position.set( 5.3, 10.5, 20 );
         this.camera.quaternion.set( -0.231, 0.126, 0.03, 0.964);
         
@@ -134,10 +137,47 @@ class App{
         //this.sfx.click = this.loadSound(clickSfx, listener);
         this.sfx.ball = this.loadSound(ballSfx, listener, 0.1);
 
+        let z = 40;
+        const width = 9;
+        const maxTreeType = 2;
+        const offset = new THREE.Vector3();
+
+        while (z>-2000){
+            const w = (Math.random()>0.5) ? width : -width;
+            const x = (Math.random()-0.5) * 4 + w;
+            z -= Math.random() * 10;
+            const theta = Math.random()*Math.PI*2;
+            const type = Math.floor(Math.random() * maxTreeType);
+            const tree = new Tree(type);
+            tree.position.set(x, 0, z);
+            tree.rotateY(theta);
+            this.scene.add(tree);
+            for(let i=0; i<6; i++){
+                const rock = new Rock();
+                offset.set( Math.random()*6, 0, Math.random()*6);
+                if (tree.position.x<0) offset.x = -offset.x;
+                rock.position.copy(tree.position).add(offset);
+                this.scene.add(rock);
+            }
+        }
+
+        const rockface = new RockFace();
+        const rockface2 = rockface.clone();
+
+        rockface.rotateY(Math.PI/2);
+        rockface.rotateX(-Math.PI/4);
+        rockface.position.set(-width-10, 10, -200);
+        this.scene.add(rockface);
+
+        rockface2.rotateY(-Math.PI/2);
+        rockface2.rotateX(-Math.PI/4);
+        rockface2.position.set(width+10, 10, -200);
+        this.scene.add(rockface2);
+
         //this.createUI();
     } 
 
-    createUI(){
+    /*createUI(){
         //clipPath created using https://yqnn.github.io/svg-path-editor/
         const config = {
             body: { clipPath: "M 258.3888 5.4432 C 126.9744 5.4432 20.4432 81.8424 20.4432 164.4624 C 20.4432 229.1976 86.3448 284.2128 178.1016 304.8192 C 183.5448 357.696 173.2416 444.204 146.8032 476.6688 C 186.6552 431.9568 229.2288 356.5296 244.7808 313.3728 C 249.252 313.3728 253.9176 313.7616 258.3888 313.7616 C 389.8032 313.7616 496.14 246.888 496.14 164.4624 S 389.8032 5.4432 258.3888 5.4432 Z", backgroundColor: "#ddd", fontColor: "#000", fontFamily: "Gochi Hand" },
@@ -154,6 +194,15 @@ class App{
         this.camera.attach( ui.mesh );
         
         this.ui = ui;
+    }*/
+
+    createUI(){
+        this.scoreUI = new BasicUI(this.camera, new THREE.Vector3(2.5, 1.5, -3.25));
+        this.scoreUI.style.fontColor = 'white';
+        this.scoreUI.showText( 10, 30, '00000');
+        this.scoreUI.showText( 120, 30, '00:00', false);
+        this.livesUI = new BasicUI(this.camera, new THREE.Vector3(-2.0, 1.5, -3.25));
+        this.livesUI.showLives(5);
     }
     
     loadSound( snd, listener, vol=0.5, loop=false ){
