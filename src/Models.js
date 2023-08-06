@@ -238,6 +238,8 @@ class OBJParser{
 class Rock extends THREE.Mesh{
     constructor(){
         const geometry = new OBJParser(rock).geometry;
+        geometry.center();
+        geometry.translate(0, 0.5, 0);
         const material = new THREE.MeshPhongMaterial( {color: 0xaaaaaa } );//, flatShading: true });
         super(geometry, material);
     }

@@ -141,10 +141,12 @@ class App{
         const width = 9;
         const maxTreeType = 2;
         const offset = new THREE.Vector3();
+        const rock = new Rock();
 
         while (z>-2000){
             const w = (Math.random()>0.5) ? width : -width;
-            const x = (Math.random()-0.5) * 4 + w;
+            let x = Math.random() * 4;
+            x = (w<0) ? w - x : w + x;
             z -= Math.random() * 10;
             const theta = Math.random()*Math.PI*2;
             const type = Math.floor(Math.random() * maxTreeType);
@@ -153,11 +155,13 @@ class App{
             tree.rotateY(theta);
             this.scene.add(tree);
             for(let i=0; i<6; i++){
-                const rock = new Rock();
-                offset.set( Math.random()*6, 0, Math.random()*6);
+                const rock1 = rock.clone();
+                offset.set( Math.random()*6, 0, (Math.random()-0.5)*6);
                 if (tree.position.x<0) offset.x = -offset.x;
-                rock.position.copy(tree.position).add(offset);
-                this.scene.add(rock);
+                rock1.position.copy(tree.position).add(offset);
+                rock1.rotateY(Math.random()*6);
+                rock1.scale.set(Math.random()*2+1, Math.random()*2+1, Math.random()*2+1);
+                this.scene.add(rock1);
             }
         }
 
@@ -166,12 +170,12 @@ class App{
 
         rockface.rotateY(Math.PI/2);
         rockface.rotateX(-Math.PI/4);
-        rockface.position.set(-width-10, 10, -200);
+        rockface.position.set(-width-15, 5, -200);
         this.scene.add(rockface);
 
         rockface2.rotateY(-Math.PI/2);
         rockface2.rotateX(-Math.PI/4);
-        rockface2.position.set(width+10, 10, -200);
+        rockface2.position.set(width+15, 5, -200);
         this.scene.add(rockface2);
 
         //this.createUI();
@@ -357,6 +361,12 @@ class App{
             scope.force.set(0,0,0);
             scope.resize();
         } );
+
+        this.renderer.xr.addEventListener( 'sessionstart', function ( event ) {
+            scope.state = 'game';
+            scope.startTime = scope.clock.elapsedTime;
+            scope.timerInterval = setInterval( scope.updateTime.bind(scope), 1000 );
+        } );
         
 
         this.dolly = new THREE.Object3D();
@@ -404,6 +414,24 @@ class App{
         this.dummyCam = new THREE.Object3D();
         this.camera.add( this.dummyCam );
 
+    }
+
+    updateTime(){
+        const tm = 100 - Math.floor(this.clock.elapsedTime - this.startTime);
+        if (tm<0){
+            this.renderer.xr.getSession().end();
+            clearInterval(this.timerInterval);
+            return;
+        }
+        const mins = Math.floor(tm/60);
+        const secs = tm - mins*60;
+        let minsStr = String(mins);
+        while (minsStr.length<2) minsStr = '0' + minsStr;
+        let secsStr = String(secs);
+        while (secsStr.length<2) secsStr = '0' + secsStr;
+        const str = minsStr + ':' + secsStr;
+        this.scoreUI.clear( { x:120, w:136 } );
+        this.scoreUI.showText( 120, 30, str, false);
     }
     
     buildGrip(){
@@ -461,6 +489,7 @@ class App{
                 this.controllers.forEach( (obj) => this.handleController(obj.controller));
             }
             this.dolly.position.z = this.ball.position.z + 10;
+            
         }
 
         if ( this.effect && this.effect.visible ) this.effect.update(time, dt);

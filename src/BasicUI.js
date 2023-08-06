@@ -23,6 +23,8 @@ class BasicUI{
             padding:20, 
             fontColor:'#f00', 
         }
+
+        this.autoUpdate = true;
     }
 
     showText(left, bottom, txt, clear=true){
@@ -30,6 +32,7 @@ class BasicUI{
         this.context.font = `${this.style.fontSize}px '${this.style.fontFamily}'`;
         this.context.fillStyle = this.style.fontColor;
         this.context.fillText(txt, left, bottom);
+        if (this.autoUpdate) this.texture.needsUpdate = true;
     }
 
     showLives(count, clear=true){
@@ -40,10 +43,19 @@ class BasicUI{
             this.context.arc(10+i*25, 16, 10, 0, 2 * Math.PI);
         }
         this.context.fill();
+        if (this.autoUpdate) this.texture.needsUpdate = true;
     }
 
-    clear(){
-        this.context.clearRect(0, 0, this.width, this.height);
+    clear(area){
+        if (area==null){
+            this.context.clearRect(0, 0, this.width, this.height);
+        }else{
+            area.x = (area.x) ? area.x : 0;
+            area.y = (area.y) ? area.y : 0;
+            area.w = (area.w) ? area.w : this.width;
+            area.h = (area.h) ? area.h : this.height;
+            this.context.clearRect(area.x, area.y, area.w, area.h);
+        }
     }
 
     createOffscreenCanvas(w, h) {
@@ -52,6 +64,10 @@ class BasicUI{
 		canvas.height = h;
 		return canvas;
 	}
+
+    update(){
+        this.texture.needsUpdate = true;
+    }
 }
 
 export { BasicUI };
