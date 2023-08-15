@@ -260,4 +260,61 @@ class RockFace extends THREE.Mesh{
     }
 }
 
-export { Tree, Rock, RockFace };
+class Tower extends THREE.Group{
+    constructor(width=3, height=1.5, depth=3, rampartHeight=0.5, rampartCount=6){
+        super();
+
+        const shape = new THREE.Shape();
+
+        shape.moveTo( width/2, height );
+        shape.lineTo( width/2, 0 );
+        shape.lineTo( -width/2, 0 );
+        shape.lineTo( -width/2, height );
+        //shape.lineTo( length, 0 );
+
+        const inc = width/((rampartCount*2)+1);
+
+        shape.lineTo(inc-width/2, height);
+
+        for(let i=0; i<rampartCount; i++){
+            let orgX = inc*(1 + 2*i)-width/2;
+            shape.lineTo( orgX, height-rampartHeight);
+            shape.lineTo( orgX + inc, height-rampartHeight);
+            shape.lineTo( orgX + inc, height);
+            shape.lineTo( orgX + 2*inc, height);
+        }
+
+        shape.lineTo( width/2, height );
+        
+        const extrudeSettings = {
+            steps: 1,
+            depth: 0.25,
+            bevelEnabled: false
+        }; 
+
+        const geometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
+        const material = new THREE.MeshStandardMaterial( { color: 0xaaaaaa } );
+        const wall1 = new THREE.Mesh( geometry, material ) ;
+        wall1.position.z = -depth/2-0.1;
+        const wall2 = wall1.clone();
+        wall2.position.z = depth/2-0.2;
+        const wall3 = wall1.clone();
+        wall3.rotateY(Math.PI/2);
+        wall3.position.set(-width/2-0.1, 0, 0);
+        const wall4 = wall3.clone();
+        wall4.position.x = width/2-0.2;
+
+        const gFloor = new THREE.BoxGeometry(width*1.1, 0.1, depth*1.1);
+        const floor = new THREE.Mesh( gFloor, material );
+        floor.position.y = height - rampartHeight * 2;
+        this.add(floor);
+
+        this.add(wall1);
+        this.add(wall2);
+        this.add(wall3);
+        this.add(wall4);
+    }
+    
+}
+
+export { Tree, Rock, RockFace, Tower };

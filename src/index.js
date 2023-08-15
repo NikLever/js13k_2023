@@ -3,10 +3,11 @@ import { SPBody } from './SimplePhysics/SPBody.js';
 import { SPSphereCollider, SPPlaneCollider, SPAABBCollider } from './SimplePhysics/SPCollider.js';
 import { BasicUI } from './BasicUI.js';
 import { VRButton } from './VRButton.js';
-//import { JoyStick } from './JoyStick.js';
+import { JoyStick } from './JoyStick.js';
 import { CollisionEffect } from './CollisionEffect.js';
 import { Tween } from './Tween.js';
-import { Tree, Rock, RockFace } from './Models.js';
+import { Tree, Rock, RockFace, Tower } from './Models.js';
+import { Knight } from './Knight.js';
 import ballSfx from "../assets/ball1.mp3";
 
 class App{
@@ -23,13 +24,13 @@ class App{
         this.camera.quaternion.set( -0.231, 0.126, 0.03, 0.964);
         
 		this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color( 0x505050 );
+        this.scene.background = new THREE.Color( 0x050505 );
 
-		this.scene.add( new THREE.HemisphereLight( 0xffffff, 0x404040 ) );
+		this.scene.add( new THREE.HemisphereLight( 0xffffff, 0x404040, 0.15 ) );
 
-        const light = new THREE.DirectionalLight( 0xffffff );
-        light.position.set( 1, 1, 1 ).normalize();
-		this.scene.add( light );
+        //const light = new THREE.DirectionalLight( 0xffffff );
+        //light.position.set( 1, 1, 1 ).normalize();
+		//this.scene.add( light );
 			
 		this.renderer = new THREE.WebGLRenderer({ antialias: true } );
 		this.renderer.setPixelRatio( window.devicePixelRatio );
@@ -51,14 +52,14 @@ class App{
         this.sfxInit = true;
         this.useHeadsetOrientation = false;
 
-        /*this.joystick = new JoyStick({ onMove: (up, right) => {
+        this.joystick = new JoyStick({ onMove: (up, right) => {
             this.force.set(right, 0, -up);
             if (this.sfxInit){
                 this.sfx.ball.stop();
                 this.sfx.ball.play();
                 this.sfxInit = false;
             }
-        }});*/
+        }});
         this.setupVR();
         
         window.addEventListener('resize', this.resize.bind(this) );
@@ -114,8 +115,8 @@ class App{
     
     initScene(){
 
-		this.scene.background = new THREE.Color( 0xa0a0a0 );
-		this.scene.fog = new THREE.Fog( 0xa0a0a0, 50, 100 );
+		this.scene.background = new THREE.Color( 0x0a0a0a );
+		this.scene.fog = new THREE.Fog( 0x0a0a0a, 50, 100 );
 
 		// ground
 		const ground = new THREE.Mesh( new THREE.PlaneGeometry( 200, 200 ), new THREE.MeshPhongMaterial( { color: 0x999999, depthWrite: true } ) );
@@ -201,12 +202,14 @@ class App{
     }*/
 
     createUI(){
-        this.scoreUI = new BasicUI(this.camera, new THREE.Vector3(2.5, 1.5, -3.25));
+        this.scoreUI = new BasicUI(this.camera, new THREE.Vector3(1, 1.1, -4.5));
         this.scoreUI.style.fontColor = 'white';
         this.scoreUI.showText( 10, 30, '00000');
         this.scoreUI.showText( 120, 30, '00:00', false);
-        this.livesUI = new BasicUI(this.camera, new THREE.Vector3(-2.0, 1.5, -3.25));
+        this.livesUI = new BasicUI(this.camera, new THREE.Vector3(-1, 1.1, -4.5));
         this.livesUI.showLives(5);
+        this.scoreUI.visible = false;
+        this.livesUI.visible = false;
     }
     
     loadSound( snd, listener, vol=0.5, loop=false ){
@@ -234,22 +237,36 @@ class App{
 
     createAABB(pos){
         const width = 3;
-        const height = 1;
+        const height = 1.5;
         const depth = 3;
-        const geometry = new THREE.BoxGeometry( width, height, depth );
-        const material = new THREE.MeshPhongMaterial( { color: 0x00FF00 });
-        const edges = new THREE.EdgesGeometry( geometry );
-        const lines = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( { color: 0x000000, linewidth: 2 } ) );
+        const rampartHeight = 0.5;
+        const rampartCount = 6;
+        //const geometry = new THREE.BoxGeometry( width, height, depth );
+        //const material = new THREE.MeshPhongMaterial( { color: 0x00FF00 });
+        //const edges = new THREE.EdgesGeometry( geometry );
+        //const lines = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( { color: 0x000000, linewidth: 2 } ) );
 
-        const box = new THREE.Mesh( geometry, material );
-        box.position.set( 0, height/2, 0 ).add(pos);
-        lines.position.copy( box.position );
-        this.scene.add( box );
-        this.scene.add( lines );
+        //const box = new THREE.Mesh( geometry, material );
+        //box.position.set( 0, height/2, 0 ).add(pos);
+        //lines.position.copy( box.position );
+        //this.scene.add( box );
+        //this.scene.add( lines );
+        let tower;
 
-        const body = new SPBody( box, new SPAABBCollider(new THREE.Vector3(-width/2, -height/2, -depth/2), 
+        if (this.tower){
+            tower = this.tower.clone();
+        }else{
+            tower = new Tower(3, 3.5, 3, 0.5, 6);
+            this.tower = tower;
+        }
+
+        tower.position.copy(pos);
+        
+        this.scene.add(tower)
+
+        const body = new SPBody( tower, new SPAABBCollider(new THREE.Vector3(-width/2, -height/2, -depth/2), 
                                         new THREE.Vector3(width/2, height/2, depth/2) )); 
-        body.edges = lines;
+        //body.edges = lines;
 
         this.world.addBody( body );
         return body;
@@ -266,33 +283,51 @@ class App{
         return body;
     }
 
+    createPlayer(){
+        const player = new Knight( this.scene );
+        player.root.position.set( 2.1, 0.5, 0 );
+        const body = new SPBody( player.root, new SPSphereCollider(0.5), 1 ); 
+        body.mesh.userData.knight = player;
+        this.world.addBody( body );
+        return body;
+    }
+
     initPhysics(){
         this.world = new SPWorld();
         const pos = new THREE.Vector3();
         this.aabb = this.createAABB(pos);
 
-        this.tweens.push(new Tween(this.aabb.mesh.scale, 'x', 0, 2.0, onComplete.bind(this)));
-        this.tweens.push(new Tween(this.aabb.edges.scale, 'x', 0, 2.0, onComplete.bind(this)));
+        //this.tweens.push(new Tween(this.aabb.mesh.scale, 'x', 0, 2.0, onComplete.bind(this)));
+        //this.tweens.push(new Tween(this.aabb.edges.scale, 'x', 0, 2.0, onComplete.bind(this)));
 
-        function onComplete(tween){
+        /*function onComplete(tween){
             const index = this.tweens.indexOf(tween);
             if (index >= 0) this.tweens.splice(index, 1);
             this.aabb.mesh.visible = false;
             this.aabb.edges.visible = false;
             this.aabb.active = false;
-        }
+        }*/
 
-        for(let x=-5; x<=5; x+=5){
-            for(let z=-5; z<=5; z+=5){
-                if (x==0 && z==0) continue;
+        for(let z=15; z>=-1000; z-=20){
+            for(let x=-5; x<5; x+=5){
                 pos.set(x, 0, z);
                 this.createAABB(pos);
             }
+            for(let x=-2.5; x<5; x+=5){
+                pos.set(x, 0, z-10);
+                this.createAABB(pos);
+            }
         }
-        this.ball = this.createBall();
+
+        /*this.ball = this.createBall();
         this.ball.sfx = this.sfx.ball;
         this.ball.onCollision = () => {
             this.effect.reset( this.ball.position );
+        }*/
+        this.player = this.createPlayer();
+        this.player.sfx = this.sfx.ball;
+        this.player.onCollision = () => {
+            this.effect.reset( this.player.position );
         }
         this.fixedStep = 1/60;
         this.effect = new CollisionEffect(this.scene, false);
@@ -356,20 +391,30 @@ class App{
             scope.camera.position.set( 5.3, 10.5, 20 );
             scope.camera.quaternion.set( -0.231, 0.126, 0.03, 0.964);
             scope.camera.fov = 50;
-            scope.ball.position.set( 2.1, 0.5, 0);
-            scope.ball.velocity.set(0,0,0);
+            scope.player.position.set( 2.1, 0.5, 0);
+            scope.player.velocity.set(0,0,0);
             scope.force.set(0,0,0);
             scope.resize();
+            scope.scoreUI.visible = false;
+            scope.livesUI.visible = false;
         } );
 
         this.renderer.xr.addEventListener( 'sessionstart', function ( event ) {
             scope.state = 'game';
             scope.startTime = scope.clock.elapsedTime;
             scope.timerInterval = setInterval( scope.updateTime.bind(scope), 1000 );
+            scope.lives = 5;
+            scope.livesUI.showLives( scope.lives );
+            
+            scope.scoreUI.visible = true;
+            scope.livesUI.visible = true;
         } );
         
 
-        this.dolly = new THREE.Object3D();
+        this.dolly = new THREE.Group();
+        this.root = new THREE.Group();
+        this.root.position.y = -3.4;
+        this.dolly.add( this.root );
 
         this.controllers = [];
 
@@ -398,7 +443,7 @@ class App{
                 //this.remove( this.children[ 0 ] );
             } );
 
-            this.dolly.add( controller );
+            this.root.add( controller );
 
             const grip = this.renderer.xr.getControllerGrip( i );
             grip.add( this.buildGrip( ) );
@@ -410,6 +455,12 @@ class App{
         this.dolly.position.set(0, 5, 10);
         this.dolly.add( this.camera );
         this.scene.add( this.dolly );
+        this.camera.remove( this.scoreUI.mesh );
+        this.scoreUI.mesh.position.set(1, 2.1, -2.5 );
+        this.camera.remove( this.livesUI.mesh );
+        this.livesUI.mesh.position.set(-1, 2.1, -2.5 );
+        this.dolly.attach( this.scoreUI.mesh );
+        this.dolly.attach( this.livesUI.mesh )
         
         this.dummyCam = new THREE.Object3D();
         this.camera.add( this.dummyCam );
@@ -476,7 +527,9 @@ class App{
 	render( time ) {  
         const dt = this.clock.getDelta();
         if (this.world){
-            this.ball.velocity.add( this.force.clone().multiplyScalar(dt * this.speed) );
+            //this.ball.velocity.add( this.force.clone().multiplyScalar(dt * this.speed) );
+            this.player.velocity.add( this.force.clone().multiplyScalar(dt * this.speed) );
+
             this.world.step(this.fixedStep);
         }
 
@@ -488,7 +541,7 @@ class App{
             }else{
                 this.controllers.forEach( (obj) => this.handleController(obj.controller));
             }
-            this.dolly.position.z = this.ball.position.z + 10;
+            this.dolly.position.z = this.player.position.z + 10;
             
         }
 

@@ -27,6 +27,10 @@ class BasicUI{
         this.autoUpdate = true;
     }
 
+    set visible( value ){
+        this.mesh.visible = value;
+    }
+
     showText(left, bottom, txt, clear=true){
         if (clear) this.clear();
         this.context.font = `${this.style.fontSize}px '${this.style.fontFamily}'`;
