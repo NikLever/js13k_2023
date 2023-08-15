@@ -67,7 +67,40 @@ class Knight{
             }
         });
 
+        this.animClips = {};
+        const config1 = {
+            duration: 0.3,
+            times: [0, 0.1, 0.3],
+            pos:[{ x:0, y:0, z:0 }, { x:-0.261, y:0.522, z:0.201 }, { x:-0.293, y:0.722, z:0.861 }],
+            rot:[{ x:0, y:0, z:0 }, { x:21.69, y:13.79, z:-9.18 }, { x:-2.23, y:4.21, z:175.94 }]
+        }
+        this.animClips.drawsword = this.createAnim('drawsword', config1);
+
+        this.mixer = new THREE.AnimationMixer(this.sword);
+        this.action = this.mixer.clipAction(this.animClips.drawsword);
+        this.action.clampWhenFinished = true;
+        this.action.loop = THREE.LoopOnce;
+
         return root;
+    }
+
+    createAnim(name, config){
+        const pvalues = [], qvalues = [];
+        const v = new THREE.Vector3(), q = new THREE.Quaternion(), e = new THREE.Euler();
+        const d2r = Math.PI/180;
+
+        for(let i=0; i<config.times.length; i++){
+            const pos = config.pos[i];
+            const rot = config.rot[i];
+            v.set(pos.x, pos.y, pos.z).toArray( pvalues, pvalues.length );
+            e.set(rot.x*d2r, rot.y*d2r, rot.z*d2r);
+            q.setFromEuler(e).toArray( qvalues, qvalues.length );
+        }
+
+		const pos = new THREE.VectorKeyframeTrack( '.position', config.times, pvalues );
+        const rot = new THREE.QuaternionKeyframeTrack( '.quaternion', config.times, qvalues );
+
+		return new THREE.AnimationClip( name, config.duration, [ pos, rot ] );
     }
 
     createSword(){
@@ -110,6 +143,10 @@ class Knight{
         crossBar.add(crossBarEnd2);
 
         return root;
+    }
+
+    update(dt){
+        if (this.mixer) this.mixer.update(dt);
     }
 }
 
