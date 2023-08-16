@@ -3,15 +3,17 @@ import { SPBody } from './SimplePhysics/SPBody.js';
 import { SPSphereCollider, SPPlaneCollider, SPAABBCollider } from './SimplePhysics/SPCollider.js';
 import { BasicUI } from './BasicUI.js';
 import { VRButton } from './VRButton.js';
-import { JoyStick } from './JoyStick.js';
 import { CollisionEffect } from './CollisionEffect.js';
 import { Tween } from './Tween.js';
 import { Tree, Rock, RockFace, Tower } from './Models.js';
 import { Knight } from './Knight.js';
+import { DebugControls } from './DebugControls.js';
 import ballSfx from "../assets/ball1.mp3";
 
 class App{
 	constructor(){
+        const debug = false;
+
 		const container = document.createElement( 'div' );
 		document.body.appendChild( container );
         
@@ -48,14 +50,10 @@ class App{
         this.sfxInit = true;
         this.useHeadsetOrientation = false;
 
-        this.joystick = new JoyStick({ onMove: (up, right) => {
-            this.force.set(right, 0, -up);
-            if (this.sfxInit){
-                this.sfx.ball.stop();
-                this.sfx.ball.play();
-                this.sfxInit = false;
-            }
-        }});
+        if (debug){
+            this.debugControls = new DebugControls(this );
+        }
+
         this.setupVR();
         
         window.addEventListener('resize', this.resize.bind(this) );
@@ -78,30 +76,26 @@ class App{
 		this.scene.fog = new THREE.Fog( 0x0a0a0a, 50, 100 );
 
 		// ground
-		const ground = new THREE.Mesh( new THREE.PlaneGeometry( 200, 200 ), new THREE.MeshPhongMaterial( { color: 0x999999, depthWrite: true } ) );
+		const ground = new THREE.Mesh( new THREE.PlaneGeometry( 100, 1000 ), new THREE.MeshPhongMaterial( { color: 0x999999, depthWrite: true } ) );
 		ground.rotation.x = - Math.PI / 2;
 		this.scene.add( ground );
+        ground.position.z = -400;
         this.ground = ground;
-
-		const grid = new THREE.GridHelper( 200, 40, 0x000000, 0x000000 );
-		grid.material.opacity = 0.2;
-		grid.material.transparent = true;
-		this.scene.add( grid );
-
-        //this.createDot();
 
         const listener = new THREE.AudioListener();
         this.camera.add( listener );
 
         this.sfx = {};
-        //this.sfx.click = this.loadSound(clickSfx, listener);
         this.sfx.ball = this.loadSound(ballSfx, listener, 0.1);
 
         let z = 40;
-        const width = 9;
+        const width = 12;
         const maxTreeType = 2;
         const offset = new THREE.Vector3();
         const rock = new Rock();
+        const tree1 = new Tree(0);
+        const tree2 = new Tree(1);
+        const trees = [tree1, tree2];
 
         while (z>-2000){
             const w = (Math.random()>0.5) ? width : -width;
@@ -110,7 +104,7 @@ class App{
             z -= Math.random() * 10;
             const theta = Math.random()*Math.PI*2;
             const type = Math.floor(Math.random() * maxTreeType);
-            const tree = new Tree(type);
+            const tree = trees[type].clone();
             tree.position.set(x, 0, z);
             tree.rotateY(theta);
             this.scene.add(tree);
@@ -137,28 +131,7 @@ class App{
         rockface2.rotateX(-Math.PI/4);
         rockface2.position.set(width+15, 5, -200);
         this.scene.add(rockface2);
-
-        //this.createUI();
     } 
-
-    /*createUI(){
-        //clipPath created using https://yqnn.github.io/svg-path-editor/
-        const config = {
-            body: { clipPath: "M 258.3888 5.4432 C 126.9744 5.4432 20.4432 81.8424 20.4432 164.4624 C 20.4432 229.1976 86.3448 284.2128 178.1016 304.8192 C 183.5448 357.696 173.2416 444.204 146.8032 476.6688 C 186.6552 431.9568 229.2288 356.5296 244.7808 313.3728 C 249.252 313.3728 253.9176 313.7616 258.3888 313.7616 C 389.8032 313.7616 496.14 246.888 496.14 164.4624 S 389.8032 5.4432 258.3888 5.4432 Z", backgroundColor: "#ddd", fontColor: "#000", fontFamily: "Gochi Hand" },
-            speech: { type: "text", position: { left: 50, top: 80 }, fontSize: 45, fontColor: "#000", width: 400, height: 250 },
-            opacity: 1
-        }
-        const speech = "A custom shaped panel. How about that?";
-        const content = {
-            speech
-        }
-        const ui = new CanvasUI( content, config );
-        ui.mesh.position.set( 0, 1.5, 2 );
-        this.scene.add( this.camera );
-        this.camera.attach( ui.mesh );
-        
-        this.ui = ui;
-    }*/
 
     createUI(){
         this.scoreUI = new BasicUI(this.camera, new THREE.Vector3(1, 1.1, -4.5));
@@ -186,51 +159,6 @@ class App{
         return sound;
     }
 
-    /*createDot(){
-        const geometry = new THREE.SphereGeometry( 0.1 );
-        const material = new THREE.MeshPhongMaterial( { color: 0x0000FF, depthTest: true });
-        const dot = new THREE.Mesh( geometry, material );
-        this.scene.add( dot );
-        this.dot = dot;
-    }*/
-
-    createAABB(pos){
-        const width = 3;
-        const height = 1.5;
-        const depth = 3;
-        const rampartHeight = 0.5;
-        const rampartCount = 6;
-        //const geometry = new THREE.BoxGeometry( width, height, depth );
-        //const material = new THREE.MeshPhongMaterial( { color: 0x00FF00 });
-        //const edges = new THREE.EdgesGeometry( geometry );
-        //const lines = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( { color: 0x000000, linewidth: 2 } ) );
-
-        //const box = new THREE.Mesh( geometry, material );
-        //box.position.set( 0, height/2, 0 ).add(pos);
-        //lines.position.copy( box.position );
-        //this.scene.add( box );
-        //this.scene.add( lines );
-        let tower;
-
-        if (this.tower){
-            tower = this.tower.clone();
-        }else{
-            tower = new Tower(3, 3.5, 3, 0.5, 6);
-            this.tower = tower;
-        }
-
-        tower.position.copy(pos);
-        
-        this.scene.add(tower)
-
-        const body = new SPBody( tower, new SPAABBCollider(new THREE.Vector3(-width/2, -height/2, -depth/2), 
-                                        new THREE.Vector3(width/2, height/2, depth/2) )); 
-        //body.edges = lines;
-
-        this.world.addBody( body );
-        return body;
-    }
-
     createBall(){
         const geometry = new THREE.SphereGeometry( 0.5, 20, 12 );
         const material = new THREE.MeshPhongMaterial( { color: 0xFF0000 });
@@ -244,45 +172,100 @@ class App{
 
     createPlayer(){
         const player = new Knight( this.scene );
-        player.root.position.set( 2.1, 0.5, 0 );
+        player.root.position.set( 0, 0.5, 10 );
         const body = new SPBody( player.root, new SPSphereCollider(0.5), 1 ); 
         body.mesh.userData.knight = player;
+        this.knight = player;
         this.world.addBody( body );
         return body;
+    }
+
+    createWall(n, z, parts){
+        const self = this;
+        const pos = new THREE.Vector3(0,0,z);
+
+        switch(n){
+            case 1:
+                createWall1();
+                break;
+            case 2:
+                createWall2()
+                break;
+            case 3:
+                createWall3()
+                break;
+        }
+
+        function createWall1(){
+            const positions = [-10, -6, -2, 2, 6, 10];
+            const objects = ['tower2', 'wall3', 'tower3', 'tower3', 'wall3', 'tower2'];
+            buildWall(positions, objects);
+        }
+
+        function createWall2(){
+            const positions = [-10, -8, -6, -2, 1, 4, 7, 10];
+            const objects = ['tower2', 'wall1', 'tower3', 'tower3', 'wall2', 'tower1', 'wall2', 'tower2'];
+            buildWall(positions, objects);
+        }
+
+        function createWall3(){
+            const positions = [-10, -7, -4, -1, 2, 6, 8, 10];
+            const objects = ['tower2', 'wall2', 'tower1', 'wall2', 'tower3', 'tower3', 'wall1', 'tower2'];
+            buildWall(positions, objects);
+        }
+
+        function buildWall(positions, objects){
+            const pos = new THREE.Vector3(0,0,z);
+            for(let i=0; i<positions.length; i++){
+                pos.x = positions[i];
+                const part = parts[objects[i]].root.clone();
+                createAABB(pos, part);
+            }
+            pos.set(-10, 0, z-10);
+            let part = parts.wall4.root.clone();
+            createAABB(pos, part);
+            pos.x = 10;
+            createAABB(pos, part.clone());
+        }
+
+        function createAABB(pos, tower){
+            if (!tower) return;
+    
+            tower.position.copy(pos);
+            
+            self.scene.add(tower)
+    
+            const max = new THREE.Vector3( tower.userData.bounds.width, tower.userData.bounds.height, tower.userData.bounds.depth ).multiplyScalar(0.5);
+            const min = max.clone().multiplyScalar(-1);
+
+            const body = new SPBody( tower, new SPAABBCollider(min,  max)); 
+    
+            self.world.addBody( body );
+        }
     }
 
     initPhysics(){
         this.world = new SPWorld();
         const pos = new THREE.Vector3();
-        this.aabb = this.createAABB(pos);
 
-        //this.tweens.push(new Tween(this.aabb.mesh.scale, 'x', 0, 2.0, onComplete.bind(this)));
-        //this.tweens.push(new Tween(this.aabb.edges.scale, 'x', 0, 2.0, onComplete.bind(this)));
+        const tower1 = new Tower(1,3,1);
+        const tower2 = new Tower(1,3.5,1);
+        const tower3 = new Tower(1,4,1);
+        const wall1 = new Tower(3,2,0.2);
+        const wall2 = new Tower(5,2,0.2);
+        const wall3 = new Tower(7,2,0.2);
+        const wall4 = new Tower(0.2,2,20);
 
-        /*function onComplete(tween){
-            const index = this.tweens.indexOf(tween);
-            if (index >= 0) this.tweens.splice(index, 1);
-            this.aabb.mesh.visible = false;
-            this.aabb.edges.visible = false;
-            this.aabb.active = false;
-        }*/
+        const castleParts = { tower1, tower2, tower3, wall1, wall2, wall3, wall4 };
 
-        for(let z=15; z>=-1000; z-=20){
-            for(let x=-5; x<5; x+=5){
-                pos.set(x, 0, z);
-                this.createAABB(pos);
-            }
-            for(let x=-2.5; x<5; x+=5){
-                pos.set(x, 0, z-10);
-                this.createAABB(pos);
+        for(let z=0; z>=-1000; z-=20){
+            if (z==0){
+                this.createWall(1, z, castleParts);
+            }else{
+                this.createWall(Math.floor(Math.random()*3)+1, z, castleParts);
             }
         }
 
-        /*this.ball = this.createBall();
-        this.ball.sfx = this.sfx.ball;
-        this.ball.onCollision = () => {
-            this.effect.reset( this.ball.position );
-        }*/
         this.player = this.createPlayer();
         this.player.sfx = this.sfx.ball;
         this.player.onCollision = () => {
@@ -297,21 +280,16 @@ class App{
         this.camera.updateProjectionMatrix();
         this.renderer.setSize( window.innerWidth, window.innerHeight );  
     }
-    
-    /*positionDot(){
-        const pt = this.aabb.collider.closestPoint( this.ball.position, this.aabb.position );
-        if (pt){
-            this.dot.position.copy(pt);
-            this.dot.visible = true;
-        }else{
-            this.dot.visible = false;
+
+    playAnim(name, stop=false){
+        if (this.knight){
+            if (stop){
+                this.knight.stopAnims();
+            }else{
+                this.knight.playAnim(name);
+            }
         }
-        const normal = pt.clone().sub(this.ball.position);
-        if (normal.length()<this.ball.collider.radius){
-            normal.normalize().negate().multiplyScalar(this.ball.collider.radius);
-            this.ball.position = pt.clone().add(normal);
-        }
-    }*/
+    }
 
     setupVR(){
         this.renderer.xr.enabled = true;
@@ -321,27 +299,21 @@ class App{
             this.sfx.ball.play();
         }
         
-        /*function onSelectStart() {
-            
-            this.userData.selectPressed = true;
+        function onSelectStart() {
+            scope.knight.playAnim('drawaction');    
         }
 
         function onSelectEnd() {
-
-            this.userData.selectPressed = false;
-            
+            scope.knight.stopAnims();    
         }
 
         function onSqueezeStart() {
-            
-            this.userData.squeezePressed = true;
+            scope.knight.playAnim('switchaction');  
         }
 
         function onSqueezeEnd() {
-
-            this.userData.squeezePressed = false;
-            
-        }*/
+            scope.knight.stopAnims();    
+        }
 
         const scope = this;
 
@@ -350,7 +322,7 @@ class App{
             scope.camera.position.set( 5.3, 10.5, 20 );
             scope.camera.quaternion.set( -0.231, 0.126, 0.03, 0.964);
             scope.camera.fov = 50;
-            scope.player.position.set( 2.1, 0.5, 0);
+            scope.player.position.set( 0, 0.5, 10);
             scope.player.velocity.set(0,0,0);
             scope.force.set(0,0,0);
             scope.resize();
@@ -379,10 +351,10 @@ class App{
 
         for (let i=0; i<=1; i++){
             const controller = this.renderer.xr.getController( i );
-            //controller.addEventListener( 'selectstart', onSelectStart );
-            //controller.addEventListener( 'selectend', onSelectEnd );
-            //controller.addEventListener( 'squeezestart', onSqueezeStart );
-            //controller.addEventListener( 'squeezeend', onSqueezeEnd );
+            controller.addEventListener( 'selectstart', onSelectStart );
+            controller.addEventListener( 'selectend', onSelectEnd );
+            controller.addEventListener( 'squeezestart', onSqueezeStart );
+            controller.addEventListener( 'squeezeend', onSqueezeEnd );
             controller.addEventListener( 'connected', ( event ) => {
                 const mesh = this.buildController(event.data, i);
                 mesh.scale.z = 0;
@@ -486,23 +458,26 @@ class App{
 	render( time ) {  
         const dt = this.clock.getDelta();
         if (this.world){
-            //this.ball.velocity.add( this.force.clone().multiplyScalar(dt * this.speed) );
             this.player.velocity.add( this.force.clone().multiplyScalar(dt * this.speed) );
 
             this.world.step(this.fixedStep);
         }
 
         if (this.renderer.xr.isPresenting){
-            if (this.useHeadsetOrientation){
-                this.tmpMat4.extractRotation( this.dummyCam.matrixWorld );
-                this.tmpEuler.setFromRotationMatrix(this.tmpMat4);
-                this.force.set(-this.tmpEuler.z, 0, this.tmpEuler.x);
-            }else{
-                this.controllers.forEach( (obj) => this.handleController(obj.controller));
+            if (this.debugControls==undefined){
+                if (this.useHeadsetOrientation){
+                    this.tmpMat4.extractRotation( this.dummyCam.matrixWorld );
+                    this.tmpEuler.setFromRotationMatrix(this.tmpMat4);
+                    this.force.set(-this.tmpEuler.z, 0, this.tmpEuler.x);
+                }else{
+                    this.controllers.forEach( (obj) => this.handleController(obj.controller));
+                }
             }
             this.dolly.position.z = this.player.position.z + 10;
             
         }
+
+        if (this.knight) this.knight.update(dt, this.player.velocity);
 
         if ( this.effect && this.effect.visible ) this.effect.update(time, dt);
         if ( this.tweens && this.tweens.length > 0){

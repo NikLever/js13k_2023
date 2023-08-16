@@ -189,8 +189,9 @@ class Knight{
         };     
     }
 
-    update(dt){
+    update(dt, v){
         if (this.mixer) this.mixer.update(dt);
+        if (v) this.setDirection(v);
     }
 }
 

@@ -260,17 +260,25 @@ class RockFace extends THREE.Mesh{
     }
 }
 
-class Tower extends THREE.Group{
-    constructor(width=3, height=1.5, depth=3, rampartHeight=0.5, rampartCount=6){
-        super();
+class Tower{
+    constructor(width=3, height=1.5, depth=3, rampartHeight=0.5){
+        this.root = new THREE.Group();
 
+        this.root.userData.bounds = { width, height, depth };
+        
+        if (width<0.25){
+            const tmp = width;
+            width = depth;
+            depth = tmp;
+        }
+
+        const rampartCount = Math.floor(width/rampartHeight);
         const shape = new THREE.Shape();
 
         shape.moveTo( width/2, height );
         shape.lineTo( width/2, 0 );
         shape.lineTo( -width/2, 0 );
         shape.lineTo( -width/2, height );
-        //shape.lineTo( length, 0 );
 
         const inc = width/((rampartCount*2)+1);
 
@@ -293,26 +301,33 @@ class Tower extends THREE.Group{
         }; 
 
         const geometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
+        if (this.root.userData.bounds.width<0.25){
+            geometry.rotateY(Math.PI/2);
+        }
         const material = new THREE.MeshStandardMaterial( { color: 0xaaaaaa } );
         const wall1 = new THREE.Mesh( geometry, material ) ;
         wall1.position.z = -depth/2-0.1;
-        const wall2 = wall1.clone();
-        wall2.position.z = depth/2-0.2;
-        const wall3 = wall1.clone();
-        wall3.rotateY(Math.PI/2);
-        wall3.position.set(-width/2-0.1, 0, 0);
-        const wall4 = wall3.clone();
-        wall4.position.x = width/2-0.2;
 
-        const gFloor = new THREE.BoxGeometry(width*1.1, 0.1, depth*1.1);
-        const floor = new THREE.Mesh( gFloor, material );
-        floor.position.y = height - rampartHeight * 2;
-        this.add(floor);
+        this.root.add(wall1);
 
-        this.add(wall1);
-        this.add(wall2);
-        this.add(wall3);
-        this.add(wall4);
+        if (depth>0.25 && width>0.25){
+            const wall2 = wall1.clone();
+            wall2.position.z = depth/2-0.2;
+            const wall3 = wall1.clone();
+            wall3.rotateY(Math.PI/2);
+            wall3.position.set(-width/2-0.1, 0, 0);
+            const wall4 = wall3.clone();
+            wall4.position.x = width/2-0.2;
+
+            const gFloor = new THREE.BoxGeometry(width*1.1, 0.1, depth*1.1);
+            const floor = new THREE.Mesh( gFloor, material );
+            floor.position.y = height - rampartHeight * 2;
+            this.root.add(floor);
+            this.root.add(wall2);
+            this.root.add(wall2);
+            this.root.add(wall3);
+            this.root.add(wall4);
+        }
     }
     
 }
