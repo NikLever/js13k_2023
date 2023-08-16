@@ -12,7 +12,7 @@ import ballSfx from "../assets/ball1.mp3";
 
 class App{
 	constructor(){
-        const debug = true;
+        const debug = false;
 
 		const container = document.createElement( 'div' );
 		document.body.appendChild( container );
@@ -20,10 +20,11 @@ class App{
         this.clock = new THREE.Clock();
         
 		this.camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.1, 200 );
-        this.createUI();
 
 		this.camera.position.set( 5.3, 10.5, 20 );
         this.camera.quaternion.set( -0.231, 0.126, 0.03, 0.964);
+
+        this.createUI();
         
 		this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color( 0x050505 );
@@ -134,11 +135,11 @@ class App{
     } 
 
     createUI(){
-        this.scoreUI = new BasicUI(this.camera, new THREE.Vector3(1, 1.1, -4.5));
+        this.scoreUI = new BasicUI(this.camera, new THREE.Vector3(1, 1, -1));
         this.scoreUI.style.fontColor = 'white';
         this.scoreUI.showText( 10, 30, '00000');
         this.scoreUI.showText( 120, 30, '00:00', false);
-        this.livesUI = new BasicUI(this.camera, new THREE.Vector3(-1, 1.1, -4.5));
+        this.livesUI = new BasicUI(this.camera, new THREE.Vector3(-1, 1, -1));
         this.livesUI.showLives(5);
         this.scoreUI.visible = false;
         this.livesUI.visible = false;
@@ -405,11 +406,11 @@ class App{
         this.dolly.add( this.camera );
         this.scene.add( this.dolly );
         this.camera.remove( this.scoreUI.mesh );
-        this.scoreUI.mesh.position.set(1, 2.1, -2.5 );
+        this.scoreUI.mesh.position.set(1, 2, -3 );
         this.camera.remove( this.livesUI.mesh );
-        this.livesUI.mesh.position.set(-1, 2.1, -2.5 );
-        this.dolly.attach( this.scoreUI.mesh );
-        this.dolly.attach( this.livesUI.mesh )
+        this.livesUI.mesh.position.set(-1, 2, -3 );
+        this.dolly.add( this.scoreUI.mesh );
+        this.dolly.add( this.livesUI.mesh )
         
         this.dummyCam = new THREE.Object3D();
         this.camera.add( this.dummyCam );

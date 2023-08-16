@@ -14,7 +14,7 @@ class BasicUI{
 		this.mesh = new THREE.Mesh(geometry, material);
         this.mesh.position.copy(pos);
 
-        parent.attach( this.mesh );
+        parent.add( this.mesh );
 
         this.style = {
             fontFamily:'Arial', 
