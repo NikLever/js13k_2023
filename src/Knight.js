@@ -1,9 +1,11 @@
 class Knight{
     constructor(scene, black=false){
         this.root = this.createModel(black);
-        const light = new THREE.PointLight(0xFFFFFF, 2, 5)
-        light.position.set(0, 3, 1);
-        this.root.add(light);
+        if (!black){
+            const light = new THREE.PointLight(0xFFFFFF, 2, 5)
+            light.position.set(0, 3, 1);
+            this.root.add(light);
+        }
         scene.add(this.root);
     }
 
@@ -174,6 +176,7 @@ class Knight{
         this.stopAnims();
 
         if (name=='drawaction'){
+            this.attacking = true;
             this.mixer.addEventListener('finished', this.playAnim.bind(this, 'useaction'));
         }else{
             this.mixer.removeEventListener('finished');
@@ -183,6 +186,7 @@ class Knight{
     }
 
     stopAnims(){
+        this.attacking = false;
         for( const [key, action] of Object.entries(this.animactions) ) {
             action.stop();
             action.reset();

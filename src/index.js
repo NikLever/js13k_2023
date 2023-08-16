@@ -12,7 +12,7 @@ import ballSfx from "../assets/ball1.mp3";
 
 class App{
 	constructor(){
-        const debug = false;
+        const debug = true;
 
 		const container = document.createElement( 'div' );
 		document.body.appendChild( container );
@@ -176,6 +176,18 @@ class App{
         const body = new SPBody( player.root, new SPSphereCollider(0.5), 1 ); 
         body.mesh.userData.knight = player;
         this.knight = player;
+        this.knight.body = body;
+        this.world.addBody( body );
+        return body;
+    }
+
+    createEnemy(pos){
+        const enemy = new Knight( this.scene, true );
+        enemy.root.position.copy( pos );
+        const body = new SPBody( enemy.root, new SPSphereCollider(0.5), 1 ); 
+        body.mesh.userData.knight = enemy;
+        enemy.body = body;
+        this.enemies.push(enemy);
         this.world.addBody( body );
         return body;
     }
@@ -197,19 +209,19 @@ class App{
         }
 
         function createWall1(){
-            const positions = [-10, -6, -2, 2, 6, 10];
+            const positions = [-10, -6.75, -2.5, 2.5, 6.75, 10];
             const objects = ['tower2', 'wall3', 'tower3', 'tower3', 'wall3', 'tower2'];
             buildWall(positions, objects);
         }
 
         function createWall2(){
-            const positions = [-10, -8, -6, -2, 1, 4, 7, 10];
+            const positions = [-10, -7.75, -5, -0.5, 2, 5, 7.5, 10];
             const objects = ['tower2', 'wall1', 'tower3', 'tower3', 'wall2', 'tower1', 'wall2', 'tower2'];
             buildWall(positions, objects);
         }
 
         function createWall3(){
-            const positions = [-10, -7, -4, -1, 2, 6, 8, 10];
+            const positions = [-10, -7.5, -5, -2, 0.5, 5, 7.75, 10];
             const objects = ['tower2', 'wall2', 'tower1', 'wall2', 'tower3', 'tower3', 'wall1', 'tower2'];
             buildWall(positions, objects);
         }
@@ -248,21 +260,27 @@ class App{
         this.world = new SPWorld();
         const pos = new THREE.Vector3();
 
-        const tower1 = new Tower(1,3,1);
-        const tower2 = new Tower(1,3.5,1);
-        const tower3 = new Tower(1,4,1);
-        const wall1 = new Tower(3,2,0.2);
-        const wall2 = new Tower(5,2,0.2);
-        const wall3 = new Tower(7,2,0.2);
-        const wall4 = new Tower(0.2,2,20);
+        const tower1 = new Tower(2,4,2);
+        const tower2 = new Tower(2,5,2);
+        const tower3 = new Tower(2,6,2);
+        const wall1 = new Tower(3,3,0.2);
+        const wall2 = new Tower(4,3,0.2);
+        const wall3 = new Tower(7,3,0.2);
+        const wall4 = new Tower(0.2,3,20);
 
         const castleParts = { tower1, tower2, tower3, wall1, wall2, wall3, wall4 };
+        this.enemies = [];
+
+        //this.createEnemy(pos.set(0), 0.5, -10);
 
         for(let z=0; z>=-1000; z-=20){
             if (z==0){
                 this.createWall(1, z, castleParts);
             }else{
                 this.createWall(Math.floor(Math.random()*3)+1, z, castleParts);
+            }
+            if (Math.random()>0.3){
+                this.createEnemy(pos.set(this.random(-8, 8), 0.5, z-10+this.random(-5, 5)));
             }
         }
 
@@ -383,7 +401,7 @@ class App{
             this.controllers.push({controller, grip});
         }
         
-        this.dolly.position.set(0, 5, 10);
+        this.dolly.position.set(0, 8, 10);
         this.dolly.add( this.camera );
         this.scene.add( this.dolly );
         this.camera.remove( this.scoreUI.mesh );
@@ -400,7 +418,7 @@ class App{
 
     updateTime(){
         const tm = 100 - Math.floor(this.clock.elapsedTime - this.startTime);
-        if (tm<0){
+        if (tm<0 && this.renderer.xr.getSession()){
             this.renderer.xr.getSession().end();
             clearInterval(this.timerInterval);
             return;
@@ -475,6 +493,19 @@ class App{
             }
             this.dolly.position.z = this.player.position.z + 10;
             
+            if ( this.enemies ){
+                this.enemies.forEach( enemy => {
+                    enemy.body.velocity.copy(enemy.root.position).sub(this.knight.root.position).normalize().multiplyScalar(this.speed*0.7).negate();
+                    enemy.update(dt, enemy.body.velocity);
+                    if (enemy.root.position.distanceTo(this.knight.root.position)<2){
+                        if (!enemy.attacking){
+                            enemy.playAnim('drawaction');
+                        }
+                    }else if (enemy.attacking){
+                        enemy.stopAnims();
+                    }
+                })
+            }
         }
 
         if (this.knight) this.knight.update(dt, this.player.velocity);

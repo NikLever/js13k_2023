@@ -102,11 +102,18 @@ class Tree extends THREE.Group{
         const trunk = new THREE.Mesh(geometry, material);
         this.add(trunk);
 
-        const geo2 = new THREE.SphereGeometry(1.5);
+        const geo2 = new THREE.SphereGeometry(1.75);
+        geo2.scale(1, 0.7, 1.1);
         const mat2 = new THREE.MeshPhongMaterial({color: 0xdd9c22 });
         const leaves = new THREE.Mesh( geo2, mat2 );
         leaves.position.x -= Math.sin(maxBend)*height;
         leaves.position.y = Math.cos(maxBend)*height
+        const leaves2 = leaves.clone();
+        leaves2.scale.set(1.2,1.2,1.2);
+        const n = 0.8;
+        leaves2.position.x -= Math.sin(maxBend*n)*height*n;
+        leaves2.position.y = Math.cos(maxBend*n)*height*n;
+        this.add(leaves2);
         this.add(leaves);
     }
 
@@ -240,7 +247,7 @@ class Rock extends THREE.Mesh{
         const geometry = new OBJParser(rock).geometry;
         geometry.center();
         geometry.translate(0, 0.5, 0);
-        const material = new THREE.MeshPhongMaterial( {color: 0xaaaaaa } );//, flatShading: true });
+        const material = new THREE.MeshPhongMaterial( {color: 0xcccccc } );//, flatShading: true });
         super(geometry, material);
     }
 }
@@ -255,13 +262,13 @@ class RockFace extends THREE.Mesh{
             vertices.array[i] += (Math.random()-0.5) * 0.95;
         }
         vertices.needsUpdate = true;
-        const material = new THREE.MeshPhongMaterial( {color: 0xaaaaaa, flatShading: true });
+        const material = new THREE.MeshPhongMaterial( {color: 0x999999, flatShading: true });
         super(geometry, material);
     }
 }
 
 class Tower{
-    constructor(width=3, height=1.5, depth=3, rampartHeight=0.5){
+    constructor(width=3, height=1.5, depth=3, rampartHeight=0.75){
         this.root = new THREE.Group();
 
         this.root.userData.bounds = { width, height, depth };
@@ -286,8 +293,8 @@ class Tower{
 
         for(let i=0; i<rampartCount; i++){
             let orgX = inc*(1 + 2*i)-width/2;
-            shape.lineTo( orgX, height-rampartHeight);
-            shape.lineTo( orgX + inc, height-rampartHeight);
+            shape.lineTo( orgX, height-rampartHeight/2);
+            shape.lineTo( orgX + inc, height-rampartHeight/2);
             shape.lineTo( orgX + inc, height);
             shape.lineTo( orgX + 2*inc, height);
         }
@@ -296,7 +303,7 @@ class Tower{
         
         const extrudeSettings = {
             steps: 1,
-            depth: 0.25,
+            depth: (depth<0.25) ? 0.5 : 0.25,
             bevelEnabled: false
         }; 
 
@@ -304,7 +311,7 @@ class Tower{
         if (this.root.userData.bounds.width<0.25){
             geometry.rotateY(Math.PI/2);
         }
-        const material = new THREE.MeshStandardMaterial( { color: 0xaaaaaa } );
+        const material = new THREE.MeshStandardMaterial( { color: 0xddddaa } );
         const wall1 = new THREE.Mesh( geometry, material ) ;
         wall1.position.z = -depth/2-0.1;
 
@@ -319,9 +326,9 @@ class Tower{
             const wall4 = wall3.clone();
             wall4.position.x = width/2-0.2;
 
-            const gFloor = new THREE.BoxGeometry(width*1.1, 0.1, depth*1.1);
+            const gFloor = new THREE.BoxGeometry(width*1.15, 0.3, depth*1.15);
             const floor = new THREE.Mesh( gFloor, material );
-            floor.position.y = height - rampartHeight * 2;
+            floor.position.y = height - rampartHeight - 0.15;
             this.root.add(floor);
             this.root.add(wall2);
             this.root.add(wall2);
