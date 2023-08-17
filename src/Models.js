@@ -317,6 +317,62 @@ class Tower{
     
 }
 
+class Heart extends THREE.Mesh{
+    constructor(){
+        let x, y;
+        x=y=0;
+
+        const shape = new THREE.Shape();
+        shape.moveTo( x + 25, y + 25 );
+        shape.bezierCurveTo( x + 25, y + 25, x + 20, y, x, y );
+        shape.bezierCurveTo( x - 30, y, x - 30, y + 35, x - 30, y + 35 );
+        shape.bezierCurveTo( x - 30, y + 55, x - 10, y + 77, x + 25, y + 95 );
+        shape.bezierCurveTo( x + 60, y + 77, x + 80, y + 55, x + 80, y + 35 );
+        shape.bezierCurveTo( x + 80, y + 35, x + 80, y, x + 50, y );
+        shape.bezierCurveTo( x + 35, y, x + 25, y + 25, x + 25, y + 25 );
+
+        const extrudeSettings = {
+            steps: 1,
+            depth: 10,
+            bevelEnabled: false
+        }; 
+
+        const geometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
+        const scale = 0.01;
+        geometry.scale( scale, scale, scale );
+        geometry.rotateZ(Math.PI);
+        geometry.translate(0.27,1.5,-0.05);
+        const material = new THREE.MeshStandardMaterial( { color: 0xf62faa });
+        super(geometry, material);
+    }
+}
+
+class Shield extends THREE.Mesh{
+    constructor(){
+        const shape = new THREE.Shape();
+
+        shape.moveTo( 0, 0 );
+        shape.lineTo(0.4, 0.3);
+        shape.lineTo(0.5, 1);
+        shape.lineTo(0.4, 1.05);
+        shape.lineTo(0, 1.1);
+        shape.lineTo(-0.4, 1.05);
+        shape.lineTo(-0.5, 1);
+        shape.lineTo(-0.4, 0.3);
+
+        const extrudeSettings = {
+            steps: 1,
+            depth: 0.3,
+            bevelEnabled: false
+        }; 
+
+        const geometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
+        geometry.translate(0,1,-0.15);
+        const material = new THREE.MeshStandardMaterial( { color: 0xa390cf });
+        super(geometry, material);
+    }
+}
+
 class Coffin extends THREE.Mesh{
     constructor(){
         const shape = new THREE.Shape();
@@ -437,4 +493,4 @@ class Gate extends THREE.Group{
     }
 }
 
-export { Tree, Rock, RockFace, Tower, Gate, Coffin };
+export { Tree, Rock, RockFace, Tower, Gate, Coffin, Heart, Shield };

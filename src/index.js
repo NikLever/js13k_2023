@@ -1,4 +1,4 @@
-import { Coffin } from './Models.js';
+import { Shield } from './Models.js';
 import { OrbitControls } from './OrbitControls.js';
 
 class App{
@@ -45,7 +45,7 @@ class App{
             console.log(`keydown ${event.code}`);
             switch(event.code){
                 case 'KeyO':
-                    this.coffin.animate();
+                    //this.coffin.animate();
                     break;
             }
           }, false);
@@ -62,8 +62,8 @@ class App{
         const mesh = new THREE.Mesh( geometry, material );
         mesh.position.y = 0.7;
         this.scene.add(mesh);
-        this.coffin = new Coffin();
-        this.scene.add(this.coffin);
+        this.shield = new Shield();
+        this.scene.add(this.shield);
     } 
     
     resize(){
@@ -74,8 +74,8 @@ class App{
     
 	render( ) {  
         const dt = this.clock.getDelta();
-        if (this.coffin){
-            this.coffin.update(dt);
+        if (this.shield){
+            this.shield.rotateY(0.01);
         }
         this.renderer.render( this.scene, this.camera );
     }
