@@ -7,6 +7,7 @@ class Knight{
             this.root.add(light);
         }
         scene.add(this.root);
+        this.life = 1;
     }
 
     createModel(colours, black){

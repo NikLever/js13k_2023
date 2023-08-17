@@ -1,10 +1,8 @@
 import { SPWorld } from './SimplePhysics/SPWorld.js';
 import { SPBody } from './SimplePhysics/SPBody.js';
 import { SPSphereCollider, SPPlaneCollider, SPAABBCollider } from './SimplePhysics/SPCollider.js';
-import { BasicUI } from './BasicUI.js';
 import { VRButton } from './VRButton.js';
 import { CollisionEffect } from './CollisionEffect.js';
-import { Tween } from './Tween.js';
 import { Tree, Rock, RockFace, Tower } from './Models.js';
 import { Player } from './Player.js';
 import { Enemy  } from './Enemy.js';
@@ -13,7 +11,7 @@ import ballSfx from "../assets/ball1.mp3";
 
 class App{
 	constructor(){
-        const debug = false;
+        const debug = true;
 
 		const container = document.createElement( 'div' );
 		document.body.appendChild( container );
@@ -508,7 +506,7 @@ class App{
             }
         }
 
-        if (this.knight) this.knight.update(dt, this.player.velocity);
+        if (this.knight) this.knight.update(dt, this.player.velocity, this.dummyCam);
 
         if ( this.effect && this.effect.visible ) this.effect.update(time, dt);
         if ( this.tweens && this.tweens.length > 0){
