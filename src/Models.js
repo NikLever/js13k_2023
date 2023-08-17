@@ -317,4 +317,124 @@ class Tower{
     
 }
 
-export { Tree, Rock, RockFace, Tower };
+class Coffin extends THREE.Mesh{
+    constructor(){
+        const shape = new THREE.Shape();
+
+        shape.moveTo( 0.4, 0);
+        shape.lineTo( 0.6, 1.3 );
+        shape.lineTo( 0.4, 2 );
+        shape.lineTo( -0.4, 2 );
+        shape.lineTo( -0.6, 1.3 );
+        shape.lineTo( -0.4, 0 );
+
+        const extrudeSettings = {
+            steps: 1,
+            depth: 0.9,
+            bevelEnabled: false
+        }; 
+
+        const geometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
+        geometry.translate(0,0,-0.45);
+        const material = new THREE.MeshStandardMaterial( { color: 0x71562a, transparent: true });
+        super(geometry, material);
+
+        const config = {
+            duration: 1,
+            times: [0, 1],
+            rot:[0, Math.PI],
+            pos:[0, 2],
+            fade:[1, 0]
+        }
+        const rot = new THREE.NumberKeyframeTrack( '.rotation[y]', config.times, config.rot );
+        const pos = new THREE.NumberKeyframeTrack( '.position[y]', config.times, config.pos );
+        const fade = new THREE.NumberKeyframeTrack( '.material.opacity', config.times, config.fade );
+
+		const clip = new THREE.AnimationClip( 'animatete', config.duration, [ rot, pos, fade ] );
+        this.mixer = new THREE.AnimationMixer(this);
+        this.action = this.mixer.clipAction(clip);
+        this.action.clampWhenFinished = true;
+        this.action.loop = THREE.LoopOnce;
+    }
+
+    animate(){
+        this.action.reset();
+        this.action.play();
+    }
+
+    update(dt){
+        this.mixer.update(dt);
+    }
+}
+
+class Gate extends THREE.Group{
+    constructor(width, height, curveHeight=0.7){
+        super();
+        
+        const shape = new THREE.Shape();
+
+        shape.moveTo( 0, height-curveHeight);
+        shape.lineTo( 0, 0 );
+        shape.lineTo( width, 0 );
+        shape.lineTo( width, height-curveHeight );
+        shape.ellipse( -width, 0, width, curveHeight, 0, Math.PI/2, false);
+
+        const extrudeSettings = {
+            steps: 1,
+            depth: 0.2,
+            bevelEnabled: false
+        }; 
+
+        const geometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
+        geometry.translate(-width,0,0);
+        const material = new THREE.MeshStandardMaterial( { color: 0x71562a });
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.z = -0.1;
+
+        this.rightgate = new THREE.Group();
+        this.rightgate.position.x = width;
+        const geometry2 = new THREE.BoxGeometry( width + 0.1, 0.2, 0.3);
+        const material2 = new THREE.MeshStandardMaterial({ color: 0x000000 });
+        const hinge = new THREE.Mesh( geometry2, material2 );
+        hinge.position.set(-width/2 + 0.05, 0.4, 0);
+        this.rightgate.add(hinge);
+        const hinge2 = hinge.clone();
+        hinge2.position.y = height - curveHeight - 0.2;
+        this.rightgate.add(hinge2);
+        this.rightgate.add(mesh);
+        this.leftgate = this.rightgate.clone();
+        this.leftgate.position.x = -width;
+        this.leftgate.rotateY(Math.PI);
+        this.rightgate.name = 'rightgate';
+        this.leftgate.name = 'leftgate';
+
+        this.add(this.rightgate);
+        this.add(this.leftgate);
+
+        const config = {
+            duration: 0.4,
+            times: [0, 0.4],
+            rot1:[0, -Math.PI/2],
+            rot2:[0, -Math.PI/2]
+        }
+        const rot1 = new THREE.NumberKeyframeTrack( 'rightgate.rotation[y]', config.times, config.rot1 );
+        const rot2 = new THREE.NumberKeyframeTrack( 'leftgate.rotation[y]', config.times, config.rot2 );
+
+		const clip = new THREE.AnimationClip( 'opengate', config.duration, [ rot1, rot2 ] );
+        this.mixer = new THREE.AnimationMixer(this);
+        this.openaction = this.mixer.clipAction(clip);
+        this.openaction.clampWhenFinished = true;
+        this.openaction.loop = THREE.LoopOnce;
+    }
+
+    openGate(){
+        this.openaction.reset();
+        this.openaction.play();
+    }
+
+    update(dt){
+        this.mixer.update(dt);
+    }
+}
+
+export { Tree, Rock, RockFace, Tower, Gate, Coffin };
