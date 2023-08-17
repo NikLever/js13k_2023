@@ -1,4 +1,4 @@
-const rock = `
+/*const rock = `
 v -4.180146 -0.044282 1.313072
 v -3.293453 -0.011464 2.331719
 v -4.087380 0.200443 2.241611
@@ -57,29 +57,20 @@ f 9//19 10//19 11//19
 f 5//20 1//20 8//20
 f 8//21 7//21 5//21
 f 7//22 2//22 6//22
-`;
+`;*/
 
 class Tree extends THREE.Group{
-    constructor(type=Math.floor(Math.random()*0)){
+    constructor(type=0){
         super();
 
         switch(type){
             case 0:
                 this.treeA();
                 break;
-            case 1:
-                this.treeB();
-                break;
-            case 2:
-                this.treeC();
-                break;
-            case 3:
-                this.treeD();
-                break;
         }
     }
 
-    treeA(){
+    /*treeA(){
         const height = 6;
         const maxBend = Math.PI/10;
         const geometry = new THREE.CylinderGeometry( 0.3, 0.6, height, 8, 4, true );
@@ -115,9 +106,9 @@ class Tree extends THREE.Group{
         leaves2.position.y = Math.cos(maxBend*n)*height*n;
         this.add(leaves2);
         this.add(leaves);
-    }
+    }*/
 
-    treeB(){
+    treeA(){
         const height = 5;
 
         const geometry = new THREE.ConeGeometry(1.3, height/2, 10, 1, true);
@@ -141,26 +132,11 @@ class Tree extends THREE.Group{
         this.add(cone2);
         this.add(cone3);
     }
-
-    treeC(){
-        const height = 2;
-
-        const material = new THREE.MeshPhongMaterial({color: 0x365cb3 });
-        const cone1 = new THREE.Mesh(geometry, material);
-    }
-
-    treeD(){
-        const height = 2;
-
-        const material = new THREE.MeshPhongMaterial({color: 0x365cb3 });
-        const cone1 = new THREE.Mesh(geometry, material);
-    }
 }
 
-/*class Rock extends THREE.Mesh{
-    constructor(){
-        const radius = Math.random()*1.25;
-        const geometry = new THREE.SphereGeometry(radius, 8, 6);
+class Rock extends THREE.Mesh{
+    constructor(radius=0.5){
+        const geometry = new THREE.IcosahedronGeometry(radius, 8, 6);
         geometry.translate( 0, radius, 0 );
         const vertices = geometry.getAttribute('position');
         for(let i=0; i<vertices.array.length; i++){
@@ -170,9 +146,9 @@ class Tree extends THREE.Group{
         const material = new THREE.MeshPhongMaterial( {color: 0xaaaaaa } );//, flatShading: true });
         super(geometry, material);
     }
-}*/
+}
 
-class OBJParser{
+/*class OBJParser{
     constructor(txt){
         const lines = txt.split('\n');
         const vertices = [];
@@ -250,7 +226,7 @@ class Rock extends THREE.Mesh{
         const material = new THREE.MeshPhongMaterial( {color: 0xcccccc } );//, flatShading: true });
         super(geometry, material);
     }
-}
+}*/
 
 class RockFace extends THREE.Mesh{
     constructor(){

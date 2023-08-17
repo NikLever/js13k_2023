@@ -1,6 +1,6 @@
 class Knight{
-    constructor(scene, black=false){
-        this.root = this.createModel(black);
+    constructor(scene, colours, black=false){
+        this.root = this.createModel(colours, black);
         if (!black){
             const light = new THREE.PointLight(0xFFFFFF, 2, 5)
             light.position.set(0, 3, 1);
@@ -9,7 +9,7 @@ class Knight{
         scene.add(this.root);
     }
 
-    createModel(black){
+    createModel(colours, black){
         const gSkirt = new THREE.CylinderGeometry(0.4, 0.6, 0.5, 32, 1, true );
         const gHead = new THREE.SphereGeometry(0.4, 24, 10);
         const pHelmet = [
@@ -31,8 +31,6 @@ class Knight{
         ];
         const gTunic = new THREE.LatheGeometry(pTunic, 12);
         const gBelt = new THREE.CylinderGeometry(0.45, 0.45, 0.2, 32, 1, false);
-
-        const colours = (black) ? [0x0A0A0A, 0xC8AD8D, 0x3B3845, 0x423D4D, 0x000000 ] : [ 15991041, 16373422, 0xC7C7C7, 16777215, 12615993 ]
 
         const mSkirt = new THREE.MeshStandardMaterial( { color: colours[0] } );
         const mHead = new THREE.MeshStandardMaterial( { color: colours[1] } );
@@ -62,7 +60,7 @@ class Knight{
             0.7856016096417388,0.15829722622603848,1]);
         root.add(holster);
 
-        this.sword = this.createSword(black);
+        this.sword = this.createSword(colours);
         holster.add( this.sword );
 
         root.traverse( object => {
@@ -117,7 +115,7 @@ class Knight{
 		return new THREE.AnimationClip( name, config.duration, [ pos, rot ] );
     }
 
-    createSword(black){
+    createSword(colours){
         const gBlade = new THREE.BoxGeometry( 0.22, 0.5, 0.05, 2, 1, 1 );
         const pBlade = gBlade.getAttribute('position');
         const v = new THREE.Vector3();
@@ -132,10 +130,9 @@ class Knight{
         const gCrossBar = new THREE.BoxGeometry(0.28, 0.04, 0.18);
         const gCrossBarEnd = new THREE.CapsuleGeometry(0.1, 0.3, 4, 12);
         
-        const colours = (black) ? [0x999999, 0x50545E, 0x706E3E] : [16777215, 6458346, 16774938 ]
-        const mBlade = new THREE.MeshStandardMaterial( { color: colours[0], emissive: 6381921 } );
-        const mHandle = new THREE.MeshStandardMaterial( { color: colours[1] } );
-        const mGold = new THREE.MeshStandardMaterial( { color: colours[2], emissive: 6381921 } );
+        const mBlade = new THREE.MeshStandardMaterial( { color: colours[5], emissive: 6381921 } );
+        const mHandle = new THREE.MeshStandardMaterial( { color: colours[6] } );
+        const mGold = new THREE.MeshStandardMaterial( { color: colours[7], emissive: 6381921 } );
 
         const root = new THREE.Group();
         const blade = new THREE.Mesh( gBlade, mBlade );

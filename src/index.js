@@ -6,7 +6,8 @@ import { VRButton } from './VRButton.js';
 import { CollisionEffect } from './CollisionEffect.js';
 import { Tween } from './Tween.js';
 import { Tree, Rock, RockFace, Tower } from './Models.js';
-import { Knight } from './Knight.js';
+import { Player } from './Player.js';
+import { Enemy  } from './Enemy.js';
 import { DebugControls } from './DebugControls.js';
 import ballSfx from "../assets/ball1.mp3";
 
@@ -24,7 +25,7 @@ class App{
 		this.camera.position.set( 5.3, 10.5, 20 );
         this.camera.quaternion.set( -0.231, 0.126, 0.03, 0.964);
 
-        this.createUI();
+        //this.createUI();
         
 		this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color( 0x050505 );
@@ -94,9 +95,7 @@ class App{
         const maxTreeType = 2;
         const offset = new THREE.Vector3();
         const rock = new Rock();
-        const tree1 = new Tree(0);
-        const tree2 = new Tree(1);
-        const trees = [tree1, tree2];
+        const tree = new Tree();
 
         while (z>-2000){
             const w = (Math.random()>0.5) ? width : -width;
@@ -104,18 +103,18 @@ class App{
             x = (w<0) ? w - x : w + x;
             z -= Math.random() * 10;
             const theta = Math.random()*Math.PI*2;
-            const type = Math.floor(Math.random() * maxTreeType);
-            const tree = trees[type].clone();
-            tree.position.set(x, 0, z);
-            tree.rotateY(theta);
-            this.scene.add(tree);
+            const treeA = tree.clone();
+            treeA.position.set(x, 0, z);
+            treeA.rotateY(theta);
+            treeA.scale.set(this.random(0.5, 2),this.random(0.5, 2),this.random(0.5, 2));
+            this.scene.add(treeA);
             for(let i=0; i<6; i++){
                 const rock1 = rock.clone();
-                offset.set( Math.random()*6, 0, (Math.random()-0.5)*6);
-                if (tree.position.x<0) offset.x = -offset.x;
-                rock1.position.copy(tree.position).add(offset);
-                rock1.rotateY(Math.random()*6);
-                rock1.scale.set(Math.random()*2+1, Math.random()*2+1, Math.random()*2+1);
+                offset.set( this.random(0,6), 0, this.random(-3, 3));
+                if (treeA.position.x<0) offset.x = -offset.x;
+                rock1.position.copy(treeA.position).add(offset);
+                rock1.rotation.set(this.random(0, Math.PI*2),this.random(0, Math.PI*2),this.random(0, Math.PI*2));
+                rock1.scale.set(this.random(0.5, 2),this.random(0.5, 2),this.random(0.5, 2));
                 this.scene.add(rock1);
             }
         }
@@ -134,7 +133,7 @@ class App{
         this.scene.add(rockface2);
     } 
 
-    createUI(){
+    /*createUI(){
         this.scoreUI = new BasicUI(this.camera, new THREE.Vector3(1, 1, -1));
         this.scoreUI.style.fontColor = 'white';
         this.scoreUI.showText( 10, 30, '00000');
@@ -143,7 +142,7 @@ class App{
         this.livesUI.showLives(5);
         this.scoreUI.visible = false;
         this.livesUI.visible = false;
-    }
+    }*/
     
     loadSound( snd, listener, vol=0.5, loop=false ){
         // create a global audio source
@@ -172,7 +171,7 @@ class App{
     }
 
     createPlayer(){
-        const player = new Knight( this.scene );
+        const player = new Player( this.scene );
         player.root.position.set( 0, 0.5, 10 );
         const body = new SPBody( player.root, new SPSphereCollider(0.5), 1 ); 
         body.mesh.userData.knight = player;
@@ -183,7 +182,7 @@ class App{
     }
 
     createEnemy(pos){
-        const enemy = new Knight( this.scene, true );
+        const enemy = new Enemy( this.scene );
         enemy.root.position.copy( pos );
         const body = new SPBody( enemy.root, new SPSphereCollider(0.5), 1 ); 
         body.mesh.userData.knight = enemy;
@@ -345,19 +344,19 @@ class App{
             scope.player.velocity.set(0,0,0);
             scope.force.set(0,0,0);
             scope.resize();
-            scope.scoreUI.visible = false;
-            scope.livesUI.visible = false;
+            //scope.scoreUI.visible = false;
+            //scope.livesUI.visible = false;
         } );
 
         this.renderer.xr.addEventListener( 'sessionstart', function ( event ) {
             scope.state = 'game';
             scope.startTime = scope.clock.elapsedTime;
             scope.timerInterval = setInterval( scope.updateTime.bind(scope), 1000 );
-            scope.lives = 5;
-            scope.livesUI.showLives( scope.lives );
+            //scope.lives = 5;
+            //scope.livesUI.showLives( scope.lives );
             
-            scope.scoreUI.visible = true;
-            scope.livesUI.visible = true;
+            //scope.scoreUI.visible = true;
+            //scope.livesUI.visible = true;
         } );
         
 
@@ -405,12 +404,12 @@ class App{
         this.dolly.position.set(0, 8, 10);
         this.dolly.add( this.camera );
         this.scene.add( this.dolly );
-        this.camera.remove( this.scoreUI.mesh );
-        this.scoreUI.mesh.position.set(1, 2, -3 );
-        this.camera.remove( this.livesUI.mesh );
-        this.livesUI.mesh.position.set(-1, 2, -3 );
-        this.dolly.add( this.scoreUI.mesh );
-        this.dolly.add( this.livesUI.mesh )
+        //this.camera.remove( this.scoreUI.mesh );
+        //this.scoreUI.mesh.position.set(1, 2, -3 );
+        //this.camera.remove( this.livesUI.mesh );
+        //this.livesUI.mesh.position.set(-1, 2, -3 );
+        //this.dolly.add( this.scoreUI.mesh );
+        //this.dolly.add( this.livesUI.mesh )
         
         this.dummyCam = new THREE.Object3D();
         this.camera.add( this.dummyCam );
@@ -431,8 +430,8 @@ class App{
         let secsStr = String(secs);
         while (secsStr.length<2) secsStr = '0' + secsStr;
         const str = minsStr + ':' + secsStr;
-        this.scoreUI.clear( { x:120, w:136 } );
-        this.scoreUI.showText( 120, 30, str, false);
+        //this.scoreUI.clear( { x:120, w:136 } );
+        //this.scoreUI.showText( 120, 30, str, false);
     }
     
     buildGrip(){
