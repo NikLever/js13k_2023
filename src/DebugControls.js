@@ -2,6 +2,7 @@ class DebugControls{
     constructor(app){
         document.addEventListener('keydown', (event) => {
             if (event.repeat) return;
+            let panel;
 
             switch(event.code){
                 case 'ArrowUp':
@@ -15,6 +16,24 @@ class DebugControls{
                     break;
                 case 'ArrowRight':
                     app.force.x = 1;
+                    break;
+                case 'KeyP':
+                    panel = document.getElementById('openingPanel');
+                    if (panel.style.display=='none'){
+                        panel.style.display = 'block';
+                    }else{
+                        panel.style.display = 'none';
+                    }
+                    break;
+                case 'KeyG':
+                    panel = document.getElementById('gameoverPanel');
+                    const details = document.getElementById('details');
+                    details.innerHTML = "These are the details";
+                    if (panel.style.display=='none'){
+                        panel.style.display = 'block';
+                    }else{
+                        panel.style.display = 'none';
+                    }
                     break;
                 case 'KeyS':
                     if (app.playAnim) app.playAnim('drawaction');

@@ -287,13 +287,15 @@ class Tower{
         if (this.root.userData.bounds.width<0.25){
             geometry.rotateY(Math.PI/2);
         }
-        const material = new THREE.MeshStandardMaterial( { color: 0xddddaa } );
+
+        const wall = depth<0.25 || width<0.25
+        const material = new THREE.MeshStandardMaterial( { color: wall ? 0xddddaa : 0x9999aa } );
         const wall1 = new THREE.Mesh( geometry, material ) ;
         wall1.position.z = -depth/2-0.1;
 
         this.root.add(wall1);
 
-        if (depth>0.25 && width>0.25){
+        if (!wall){
             const wall2 = wall1.clone();
             wall2.position.z = depth/2-0.2;
             const wall3 = wall1.clone();

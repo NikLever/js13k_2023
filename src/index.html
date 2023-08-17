@@ -6,19 +6,10 @@
     name="viewport"
     content="initial-scale=1.0,width=device-width,user-scalable=no,viewport-fit=cover,maximum-scale=1.0, user-scalable=no"
   />
-    <title>JS13K TypeScript Webpack Starter Party</title>
-  <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
-
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://unpkg.com/three@0.154.0/build/three.module.js"
-      }
-    }
-  </script>
+    <title>Sir Coadalot and the Holy Grail</title>
 
   <script type="module">
-    import * as THREE from "three";
+    import * as THREE from "https://unpkg.com/three@0.154.0/build/three.module.js";
 
     window.THREE = THREE;
   </script>
@@ -29,18 +20,37 @@
         padding: 0;
       }
 
-      #startBtn{
+      .panel{
         position: absolute;
-        bottom: 30px;
-        width: 100px;
-        height: 50px;
+        width: 70%;
         left: 50%;
-        transform: translateX(-50%);
+        top: 50%;
+        transform: translateX(-50%) translateY(-60%);
         z-index: 1000;
+        border-style: solid;
+        border-color: #175230;
+        border-width: 20px;
+        background-color: rgb(212, 212, 180);
+        padding: 40px 40px;
+        color: #494b38;
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        font-size: large;
       }
     </style>
   </head>
   <body>
+    <div id="openingPanel" class="panel">
+      <h1>Sir Coadlot and the Holy Grail</h1>
+      <p>It is the year 1213 and <strong>Sir Coadalot</strong> is 13 years into his quest to find the Holy Grail. He has reached the final hurdle, the <strong>Castle of Doom</strong>. To reach his goal he must navigate the castle with your help.</p>
+      <h3>Instructions</h3>
+      <p>To move use the right thumbstick</p>
+      <p>To use your sword press and hold the trigger button</p>
+      <p>To start press the vr button</p>
+    </div>
+    <div id="gameoverPanel" class="panel" style="display:none">
+      <h1>Gameover</h1>
+      <p id="details"></p>
+    </div>
     <!--<button id="startBtn">Start</button>-->
   </body>
 </html>
