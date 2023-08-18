@@ -1,6 +1,8 @@
 class Knight{
     constructor(scene, colours, black=false){
-        this.root = this.createModel(colours, black);
+        this.root = new THREE.Group();
+        this.model = this.createModel(colours, black);
+        this.root.add(this.model);
         if (!black){
             const light = new THREE.PointLight(0xFFFFFF, 2, 5)
             light.position.set(0, 3, 1);

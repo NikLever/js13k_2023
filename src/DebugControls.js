@@ -25,6 +25,9 @@ class DebugControls{
                         panel.style.display = 'none';
                     }
                     break;
+                case 'KeyD':
+                    app.enemies[0].kill();
+                    break;
                 case 'KeyG':
                     panel = document.getElementById('gameoverPanel');
                     const details = document.getElementById('details');
