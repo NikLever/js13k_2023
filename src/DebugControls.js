@@ -25,7 +25,7 @@ class DebugControls{
                         panel.style.display = 'none';
                     }
                     break;
-                case 'KeyD':
+                case 'KeyK':
                     app.enemies[0].kill();
                     break;
                 case 'KeyG':

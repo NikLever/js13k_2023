@@ -6,6 +6,7 @@ module.exports = merge(common, {
   devtool: "eval-source-map",
   devServer: {
 		hot: false,
-		host: "0.0.0.0"
+		host: "0.0.0.0",
+    port: 9000
   },
 });

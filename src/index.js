@@ -28,11 +28,12 @@ class App{
 		this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color( 0x050505 );
 
-		this.scene.add( new THREE.HemisphereLight( 0xffffff, 0x404040, 0.15 ) );
+		this.scene.add( new THREE.HemisphereLight( 0xffffff, 0x404040, 0.45 ) );
 			
 		this.renderer = new THREE.WebGLRenderer({ antialias: true } );
 		this.renderer.setPixelRatio( window.devicePixelRatio );
 		this.renderer.setSize( window.innerWidth, window.innerHeight );
+       // this.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
         
 		container.appendChild( this.renderer.domElement );
 
@@ -179,15 +180,16 @@ class App{
         return body;
     }
 
-    createEnemy(pos){
-        const enemy = new Enemy( this.scene );
+    createEnemy(pos, z){
+        const enemy = new Enemy( this.scene, z );
         enemy.root.position.copy( pos );
         const body = new SPBody( enemy.root, new SPSphereCollider(0.5), 1 ); 
         body.mesh.userData.knight = enemy;
         enemy.body = body;
         this.enemies.push(enemy);
         this.world.addBody( body );
-        return body;
+        enemy.startPatrol();
+        return enemy;
     }
 
     createWall(n, z, parts){
@@ -278,7 +280,7 @@ class App{
                 this.createWall(Math.floor(Math.random()*3)+1, z, castleParts);
             }
             if (Math.random()>0.3){
-                this.createEnemy(pos.set(this.random(-8, 8), 0.5, z-10+this.random(-5, 5)));
+                this.createEnemy(pos.set(this.random(-8, 8), 0.5, z-10+this.random(-5, 5)), z-10);
             }
         }
 
@@ -493,15 +495,26 @@ class App{
             
             if ( this.enemies ){
                 this.enemies.forEach( enemy => {
-                    enemy.body.velocity.copy(enemy.root.position).sub(this.knight.root.position).normalize().multiplyScalar(this.speed*0.7).negate();
+                    if (enemy.state == enemy.STATES.HONE){
+                        enemy.body.velocity.copy(enemy.root.position).sub(this.knight.root.position).normalize().multiplyScalar(this.speed*0.7).negate();
+                    }
                     enemy.update(dt, enemy.body.velocity);
-                    if (enemy.root.position.distanceTo(this.knight.root.position)<2){
-                        if (!enemy.attacking){
-                            enemy.playAnim('drawaction');
+                    const dist = enemy.root.position.distanceTo(this.knight.root.position);
+                    if (dist<2){
+                        if (!enemy.state == enemy.STATES.ATTACK){
+                            enemy.startAttack();
                         }
-                    }else if (enemy.attacking){
+                    }else if (dist<10){
+                        enemy.startHone();
+                    }else{
                         enemy.stopAnims();
                     }
+                })
+            }
+        }else{
+            if ( this.enemies ){
+                this.enemies.forEach( enemy => {
+                    enemy.update(dt, enemy.body.velocity);
                 })
             }
         }
