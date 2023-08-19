@@ -11,7 +11,7 @@ import ballSfx from "../assets/ball1.mp3";
 
 class App{
 	constructor(){
-        const debug = true;
+        const debug = false;
 
 		const container = document.createElement( 'div' );
 		document.body.appendChild( container );
