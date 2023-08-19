@@ -148,6 +148,45 @@ class Rock extends THREE.Mesh{
     }
 }
 
+class Grail extends THREE.Group{
+    constructor(){
+        super();
+        const points = [
+            { x: 0.3, y: 0 },
+            { x: 0.3, y: 0.06 },
+            { x: 0.05, y: 0.06 },
+            { x: 0.05, y: 0.3 },
+            { x: 0.1, y: 0.32 },
+            { x: 0.2, y: 0.4 },
+            { x: 0.3, y: 0.5 },
+            { x: 0.35, y: 0.6 },
+            { x: 0.4, y: 1 },
+            { x: 0.37, y: 1 },
+            { x: 0, y: 0.33 }];
+        const gGrail = new THREE.LatheGeometry(points);
+        const gPlinthColumn = new THREE.CylinderGeometry(0.5, 0.5, 1.4, 6);
+        const gPlinthBase = new THREE.CylinderGeometry(1, 1, 0.3, 8);
+        const mGrail = new THREE.MeshPhongMaterial({ color: 15776768, emissive: 5988618, specular: 14277708, shininess: 70 });
+        const mPlinth = new THREE.MeshStandardMaterial({ color: 12496044, flatShading: true });
+
+        this.grail = new THREE.Mesh(gGrail, mGrail);
+        const plinthColumn = new THREE.Mesh( gPlinthColumn, mPlinth );
+        const plinthBase = new THREE.Mesh( gPlinthBase, mPlinth);
+        const plinthTop = new THREE.Mesh( gPlinthBase, mPlinth );
+
+        this.grail.position.y = 1.5;
+        plinthColumn.position.y = 0.72;
+        plinthBase.position.y = 0.15;
+        plinthTop.position.y = 1.36;
+        plinthTop.scale.set(0.8, 0.8, 0.8);
+
+        this.add(plinthBase);
+        this.add(plinthColumn);
+        this.add(plinthTop);
+        this.add(this.grail);
+    }
+}
+
 /*class OBJParser{
     constructor(txt){
         const lines = txt.split('\n');
@@ -493,4 +532,4 @@ class Gate extends THREE.Group{
     }
 }
 
-export { Tree, Rock, RockFace, Tower, Gate, Coffin, Heart, Shield };
+export { Tree, Rock, RockFace, Tower, Gate, Coffin, Heart, Shield, Grail };

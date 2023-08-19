@@ -37,7 +37,7 @@ class SPAABBCollider{
 
     testSphereCollision( min, max, center, radius ){
         if (min==null || max==null || center==null || radius==null){
-            console.warn( 'SPAABBCollider.testSphereCollision: no parameter can be null');
+            //console.warn( 'SPAABBCollider.testSphereCollision: no parameter can be null');
             return false;
         }
         // Compute squared distance between sphere center and AABB

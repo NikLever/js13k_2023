@@ -4,8 +4,7 @@ class CollisionEffect extends GPUParticleSystem{
     constructor(scene, visible){
         
         const texture = createStar();
-        //const radius = 0.5;
-
+        
         super({
           maxParticles: 50,
           particleSpriteTex: texture,
