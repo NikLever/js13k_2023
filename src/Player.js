@@ -11,8 +11,8 @@ class Player extends Knight{
         this.lifeUI = new LifeUI(this.root, new THREE.Vector3(0, 2.6, 0));
     }
 
-    update(dt, mixer, cam){
-        super.update(dt, mixer);
+    update(dt, v, cam){
+        super.update(dt, v);
         if (this.lifeUI.visible){
             cam.getWorldPosition(this.tmpVec)
             this.lifeUI.lookAt(this.tmpVec);

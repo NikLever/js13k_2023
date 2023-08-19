@@ -4,7 +4,7 @@ class Knight{
         this.model = this.createModel(colours, black);
         this.root.add(this.model);
         if (!black){
-            const light = new THREE.PointLight(0xFFFFFF, 2.5, 5)
+            const light = new THREE.PointLight(0xFFFFFF, 8, 8)
             light.position.set(0, 3, 1);
             this.root.add(light);
         }
@@ -35,11 +35,11 @@ class Knight{
         const gTunic = new THREE.LatheGeometry(pTunic, 12);
         const gBelt = new THREE.CylinderGeometry(0.45, 0.45, 0.2, 32, 1, false);
 
-        const mSkirt = new THREE.MeshStandardMaterial( { color: colours[0] } );
-        const mHead = new THREE.MeshStandardMaterial( { color: colours[1] } );
-        const mHelmet = new THREE.MeshStandardMaterial( { color: colours[2] } );
-        const mTunic = new THREE.MeshStandardMaterial( { color: colours[3] } );
-        const mBelt = new THREE.MeshStandardMaterial( { color: colours[4] } );
+        const mSkirt = new THREE.MeshPhongMaterial( { color: colours[0] } );
+        const mHead = new THREE.MeshPhongMaterial( { color: colours[1] } );
+        const mHelmet = new THREE.MeshPhongMaterial( { color: colours[2], specular: 0x9E9E9E } );
+        const mTunic = new THREE.MeshPhongMaterial( { color: colours[3] } );
+        const mBelt = new THREE.MeshPhongMaterial( { color: colours[4] } );
 
         const root = new THREE.Group();
         const skirt = new THREE.Mesh( gSkirt, mSkirt );
@@ -133,9 +133,9 @@ class Knight{
         const gCrossBar = new THREE.BoxGeometry(0.28, 0.04, 0.18);
         const gCrossBarEnd = new THREE.CapsuleGeometry(0.1, 0.3, 4, 12);
         
-        const mBlade = new THREE.MeshStandardMaterial( { color: colours[5], emissive: 6381921 } );
-        const mHandle = new THREE.MeshStandardMaterial( { color: colours[6] } );
-        const mGold = new THREE.MeshStandardMaterial( { color: colours[7], emissive: 6381921 } );
+        const mBlade = new THREE.MeshPhongMaterial( { color: colours[5], emissive: 6381921, specular: 0x9E9E9E } );
+        const mHandle = new THREE.MeshPhongMaterial( { color: colours[6] } );
+        const mGold = new THREE.MeshPhongMaterial( { color: colours[7], emissive: 6381921, specular: 0xCD8304 } );
 
         const root = new THREE.Group();
         const blade = new THREE.Mesh( gBlade, mBlade );
