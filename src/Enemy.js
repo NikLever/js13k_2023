@@ -54,7 +54,7 @@ class Enemy extends Knight{
     }
 
     updatePatrol(){
-        const pos = this.path[this.pathIndex];
+        const pos = this.path[this.pathIndex].clone();
         const d1 = this.prevPos.distanceTo(pos);
         this.root.getWorldPosition(this.tmpVec);
         const d2 = this.tmpVec.distanceTo(pos);
@@ -62,11 +62,13 @@ class Enemy extends Knight{
         if (d2>d1){
             this.pathIndex++;
             if (this.pathIndex>=this.path.length) this.pathIndex=0;
+            //console.log(this.pathIndex);
             pos.copy(this.path[this.pathIndex]);
             this.tmpVec.sub(pos).normalize().multiplyScalar(3).negate();
             this.body.velocity.copy(this.tmpVec);
             this.pathV.copy(this.tmpVec);
         }else{
+            //console.log('moving');
             this.body.velocity.copy(this.pathV);
         }
     }
