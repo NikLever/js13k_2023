@@ -122,10 +122,14 @@ class Knight{
         const gBlade = new THREE.BoxGeometry( 0.22, 0.5, 0.05, 2, 1, 1 );
         const pBlade = gBlade.getAttribute('position');
         const v = new THREE.Vector3();
+        let tipY;
         //Create point at blade tip
         for(let i=0; i<pBlade.array.length; i+=3){
             v.set(pBlade.array[i], pBlade.array[i+1], pBlade.array[i+2]);
-            if (v.x==0 && v.y<0) pBlade.array[i+1] -= 0.06;
+            if (v.x==0 && v.y<0){
+                pBlade.array[i+1] -= 0.06;
+                tipY = pBlade.array[i+1];
+            }
         }
         pBlade.needsUpdate = true;
         const gHandle = new THREE.CylinderGeometry(0.08, 0.09, 0.28, 8, 1, true);
@@ -141,6 +145,15 @@ class Knight{
         const blade = new THREE.Mesh( gBlade, mBlade );
         blade.matrix.fromArray([1,0,0,0,0,1,0,0,0,0,1,0,0,-0.3517202033838308,0,1]);
         root.add(blade);
+        const bladeEnd = new THREE.Object3D();
+        bladeEnd.name = 'bladeEnd';
+        bladeEnd.position.y = tipY;
+        blade.add(bladeEnd);
+        /*const gTmp = new THREE.SphereGeometry(0.3, 10, 5);
+        const mTmp = new THREE.MeshBasicMaterial();
+        const tip = new THREE.Mesh(gTmp, mTmp);
+        bladeEnd.add(tip);*/
+        this.bladeEnd = bladeEnd;
         const handle = new THREE.Mesh( gHandle, mHandle );
         handle.matrix.fromArray([1,0,0,0,0,1,0,0,0,0,1,0,0,0.07401843451376103,0,1]);
         root.add(handle);
@@ -165,18 +178,18 @@ class Knight{
         const direction = v.clone().multiplyScalar(10);
         direction.y = 0;
         const target = this.root.position.clone().add(direction);
-        const q = this.root.quaternion.clone();
-        this.root.lookAt(target);
-        this.root.quaternion.slerp(q, 0.9);
+        const q = this.model.quaternion.clone();
+        this.model.lookAt(target);
+        this.model.quaternion.slerp(q, 0.9);
     }
 
     playAnim(name){
-        console.log(`playAnim(${name})`);
+        //console.log(`playAnim(${name})`);
 
         this.stopAnims();
+        this.attacking = true;
 
         if (name=='drawaction'){
-            this.attacking = true;
             this.mixer.addEventListener('finished', this.playAnim.bind(this, 'useaction'));
         }else{
             this.mixer.removeEventListener('finished');

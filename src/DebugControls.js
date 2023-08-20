@@ -41,9 +41,6 @@ class DebugControls{
                 case 'KeyS':
                     if (app.playAnim) app.playAnim('drawaction');
                     break;
-                case 'KeyT':
-                    if (app.playAnim) app.playAnim('switchaction');
-                    break;
                 case 'KeyQ':
                     app.renderer.xr.getSession().end();
                     break;

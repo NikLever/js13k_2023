@@ -357,7 +357,7 @@ class Tower{
 }
 
 class Heart extends THREE.Mesh{
-    constructor(){
+    constructor(pos){
         let x, y;
         x=y=0;
 
@@ -381,13 +381,15 @@ class Heart extends THREE.Mesh{
         geometry.scale( scale, scale, scale );
         geometry.rotateZ(Math.PI);
         geometry.translate(0.27,1.5,-0.05);
-        const material = new THREE.MeshStandardMaterial( { color: 0xf62faa });
+        const material = new THREE.MeshStandardMaterial( { color: 0xf62faa, emissive: 0x111155 });
         super(geometry, material);
+
+        if (pos) this.position.copy(pos);
     }
 }
 
 class Shield extends THREE.Mesh{
-    constructor(){
+    constructor(pos){
         const shape = new THREE.Shape();
 
         shape.moveTo( 0, 0 );
@@ -407,8 +409,10 @@ class Shield extends THREE.Mesh{
 
         const geometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
         geometry.translate(0,1,-0.15);
-        const material = new THREE.MeshStandardMaterial( { color: 0xa390cf });
+        const material = new THREE.MeshStandardMaterial( { color: 0xa390cf, emissive: 0x514171 });
         super(geometry, material);
+
+        if (pos) this.position.copy(pos);
     }
 }
 
@@ -466,6 +470,9 @@ class Gate extends THREE.Group{
     constructor(width, height, curveHeight=0.7){
         super();
         
+        this.name = 'Gate';
+        this.userData.bounds = { width, height, depth: 0.2 };
+
         const shape = new THREE.Shape();
 
         shape.moveTo( 0, height-curveHeight);
@@ -520,6 +527,17 @@ class Gate extends THREE.Group{
         this.openaction = this.mixer.clipAction(clip);
         this.openaction.clampWhenFinished = true;
         this.openaction.loop = THREE.LoopOnce;
+
+        this.strength = 20;
+    }
+
+    hit(){
+        this.strength--;
+        if (this.strength == 0){
+            this.openGate();
+            return true;
+        }
+        return false;
     }
 
     openGate(){

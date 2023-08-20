@@ -3,11 +3,11 @@ import { SPBody } from './SimplePhysics/SPBody.js';
 import { SPSphereCollider, SPPlaneCollider, SPAABBCollider } from './SimplePhysics/SPCollider.js';
 import { VRButton } from './VRButton.js';
 import { CollisionEffect } from './CollisionEffect.js';
-import { Tree, Rock, RockFace, Tower } from './Models.js';
+import { Tree, Rock, RockFace, Tower, Shield, Heart, Grail, Gate } from './Models.js';
 import { Player } from './Player.js';
 import { Enemy  } from './Enemy.js';
 import { DebugControls } from './DebugControls.js';
-import ballSfx from "../assets/ball1.mp3";
+//import ballSfx from "../assets/ball1.mp3";
 
 class App{
 	constructor(){
@@ -87,7 +87,7 @@ class App{
         this.camera.add( listener );
 
         this.sfx = {};
-        this.sfx.ball = this.loadSound(ballSfx, listener, 0.1);
+        //this.sfx.ball = this.loadSound(ballSfx, listener, 0.1);
 
         let z = 40;
         const width = 12;
@@ -131,17 +131,6 @@ class App{
         rockface2.position.set(width+15, 5, -200);
         this.scene.add(rockface2);
     } 
-
-    /*createUI(){
-        this.scoreUI = new BasicUI(this.camera, new THREE.Vector3(1, 1, -1));
-        this.scoreUI.style.fontColor = 'white';
-        this.scoreUI.showText( 10, 30, '00000');
-        this.scoreUI.showText( 120, 30, '00:00', false);
-        this.livesUI = new BasicUI(this.camera, new THREE.Vector3(-1, 1, -1));
-        this.livesUI.showLives(5);
-        this.scoreUI.visible = false;
-        this.livesUI.visible = false;
-    }*/
     
     loadSound( snd, listener, vol=0.5, loop=false ){
         // create a global audio source
@@ -158,33 +147,26 @@ class App{
         return sound;
     }
 
-    createBall(){
-        const geometry = new THREE.SphereGeometry( 0.5, 20, 12 );
-        const material = new THREE.MeshPhongMaterial( { color: 0xFF0000 });
-        const ball = new THREE.Mesh( geometry, material );
-        ball.position.set( 2.1, 0.5, 0 );
-        this.scene.add( ball );
-        const body = new SPBody( ball, new SPSphereCollider(0.5), 1 ); 
-        this.world.addBody( body );
-        return body;
-    }
-
     createPlayer(){
-        const player = new Player( this.scene );
+        const player = new Player( this.scene, this.world );
         player.root.position.set( 0, 0.5, 10 );
         const body = new SPBody( player.root, new SPSphereCollider(0.5), 1 ); 
         body.mesh.userData.knight = player;
+        body.mesh.name = 'Player';
         this.knight = player;
         this.knight.body = body;
         this.world.addBody( body );
+        player.game = this;
+
         return body;
     }
 
     createEnemy(pos, z){
-        const enemy = new Enemy( this.scene, z );
+        const enemy = new Enemy( this.scene, z, this.world );
         enemy.root.position.copy( pos );
         const body = new SPBody( enemy.root, new SPSphereCollider(0.5), 1 ); 
         body.mesh.userData.knight = enemy;
+        body.mesh.name = 'Enemy';
         enemy.body = body;
         this.enemies.push(enemy);
         this.world.addBody( body );
@@ -208,22 +190,40 @@ class App{
                 break;
         }
 
+        pos.set(this.random( -7, 7), 0, z - this.random(3, 13) );
+        this.collectables.push( new Heart(pos) );
+        pos.set(this.random( -7, 7), 0, z - this.random(3, 13) );
+        this.collectables.push( new Shield(pos) );
+
         function createWall1(){
             const positions = [-10, -6.75, -2.5, 2.5, 6.75, 10];
             const objects = ['tower2', 'wall3', 'tower3', 'tower3', 'wall3', 'tower2'];
             buildWall(positions, objects);
+            const gate = new Gate( 1.5, 5 );
+            pos.set( 0, 0, z);
+            createAABB(pos, gate);
+            self.gates.push(gate);
         }
 
         function createWall2(){
             const positions = [-10, -7.75, -5, -0.5, 2, 5, 7.5, 10];
             const objects = ['tower2', 'wall1', 'tower3', 'tower3', 'wall2', 'tower1', 'wall2', 'tower2'];
             buildWall(positions, objects);
+            const gate = new Gate( 1.375, 4.5 );
+            pos.set( -2.75, 0, z);
+            createAABB(pos, gate);
+            self.scene.add(gate);
+            self.gates.push(gate);
         }
 
         function createWall3(){
             const positions = [-10, -7.5, -5, -2, 0.5, 5, 7.75, 10];
             const objects = ['tower2', 'wall2', 'tower1', 'wall2', 'tower3', 'tower3', 'wall1', 'tower2'];
             buildWall(positions, objects);
+            const gate = new Gate( 1.375, 4.5 );
+            pos.set( 2.75, 0, z );
+            createAABB(pos, gate);
+            self.gates.push(gate);
         }
 
         function buildWall(positions, objects){
@@ -253,6 +253,8 @@ class App{
             const body = new SPBody( tower, new SPAABBCollider(min,  max)); 
     
             self.world.addBody( body );
+
+            return body;
         }
     }
 
@@ -272,6 +274,8 @@ class App{
         this.enemies = [];
 
         //this.createEnemy(pos.set(0), 0.5, -10);
+        this.collectables = [];
+        this.gates = [];
 
         for(let z=0; z>=-1000; z-=20){
             if (z==0){
@@ -282,12 +286,22 @@ class App{
             if (Math.random()>0.3){
                 this.createEnemy(pos.set(this.random(-8, 8), 0.5, z-10+this.random(-5, 5)), z-10);
             }
+            if (z == -20){
+                this.grail = new Grail();
+                this.grail.position.set(0,0,z-10);
+                this.scene.add(this.grail);
+            }
         }
 
+        this.collectables.forEach( collectable => { this.scene.add(collectable) } );
+
         this.player = this.createPlayer();
-        this.player.sfx = this.sfx.ball;
+        //this.player.sfx = this.sfx.ball;
         this.player.onCollision = () => {
-            this.effect.reset( this.player.position );
+            const pos = this.player.position.clone();
+            pos.y += 0.7
+            this.effect.reset( pos );
+            this.player.life -= 0.1;
         }
         this.fixedStep = 1/60;
         this.effect = new CollisionEffect(this.scene, false);
@@ -314,7 +328,7 @@ class App{
         
         const button = new VRButton( this.renderer );
         button.onClick = () => {
-            this.sfx.ball.play();
+            //this.sfx.ball.play();
         }
         
         function onSelectStart() {
@@ -505,9 +519,11 @@ class App{
                             enemy.startAttack();
                         }
                     }else if (dist<10){
-                        enemy.startHone();
-                    }else{
-                        enemy.stopAnims();
+                        if (!enemy.state == enemy.STATES.ATTACK){
+                            enemy.startHone();
+                        }
+                    }else if (!enemy.state == enemy.STATES.PATROL){
+                        enemy.startPatrol();
                     }
                 })
             }
@@ -522,7 +538,16 @@ class App{
         if (this.knight) this.knight.update(dt, this.player.velocity, this.dummyCam);
 
         if ( this.effect && this.effect.visible ) this.effect.update(time, dt);
+
+        if (this.collectables){
+            this.collectables.forEach( collectable => {
+                collectable.rotateY(0.01);
+            })
+        }
     
+        if (this.gates){
+            this.gates.forEach( gate => gate.update(dt) );
+        }
        
         this.renderer.render( this.scene, this.camera );
     }

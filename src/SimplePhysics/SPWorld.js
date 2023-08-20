@@ -21,6 +21,29 @@ class SPWorld{
         }
     }
 
+    getPointCollisions( v, ignoreBody, radius = 0.1 ){
+        const intersects = [];
+        this.bodies.forEach( body => {
+            if (body == ignoreBody ) return;
+            switch(body.collider.type){
+                case SPCOLLIDERTYPES.SPHERE:
+                    if (v.distanceTo(body.position)<body.collider.radius){
+                        intersects.push(body);
+                    }
+                    break;
+                case SPCOLLIDERTYPES.AABB:
+                    const min = body.collider.min.clone().add(body.position);
+                    const max = body.collider.max.clone().add(body.position);
+                    
+                    if ( body.collider.testSphereCollision(min, max, v, radius)){
+                        intersects.push(body);
+                    }
+                    break;
+            }
+        })
+        return intersects;
+    }
+
     step(dt){
         const deltaTime = dt / this.substeps;
 

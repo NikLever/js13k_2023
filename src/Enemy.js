@@ -2,7 +2,7 @@ import { Knight } from "./Knight.js";
 import { Coffin } from "./Models.js";
 
 class Enemy extends Knight{
-    constructor(scene, z){
+    constructor(scene, z, world){
         const colours = [0x0A0A0A, 0xC8AD8D, 0x3B3845, 0x423D4D, 0x000000, 0x999999, 0x50545E, 0x706E3E ];
 
         super(scene, colours, true);
@@ -25,9 +25,17 @@ class Enemy extends Knight{
         this.path.forEach( node => {
             node.add(center);
         })
+
+        this.world;
     }
 
-
+    hit(amount=0.1){
+        if (this.state == this.STATES.DEAD) return;
+        this.life -= amount;
+        if (this.life<=0){
+            this.kill();
+        }
+    }
 
     kill(){
         this.model.visible = false;
@@ -79,7 +87,24 @@ class Enemy extends Knight{
     }
 
     startHone(){
+        this.stopAnims();
         this.state = this.STATES.HONE;
+    }
+
+    updateAttack(){
+        if (this.attacking && this.world){
+            this.bladeEnd.getWorldPosition(this.tmpVec);
+            const intersects = this.world.getPointCollisions(this.tmpVec, this.body, 0.3);
+            //console.log( 'checking intersects');
+            if (intersects.length>0){
+                const body = intersects[0];
+                const obj = body.mesh;
+                console.log( `Enemy Sword hit ${obj.name}`);
+                if ( obj.name == 'Player' ){
+                    obj.hit();
+                }
+            }
+        }
     }
 
     update(dt, v){
@@ -91,6 +116,7 @@ class Enemy extends Knight{
                 this.updatePatrol();
                 break;
             case this.STATES.ATTACK:
+                this.updateAttack();
                 break;
             case this.STATES.DEAD:
                 this.coffin.update(dt);
