@@ -1,94 +1,103 @@
-import { GPUParticleSystem } from "./GPUParticleSystem.js";
+class CollisionEffect extends THREE.InstancedMesh{
+    static STAR = 0;
 
-class CollisionEffect extends GPUParticleSystem{
-    constructor(scene, visible){
-        
-        const texture = createStar();
-        
-        super({
-          maxParticles: 50,
-          particleSpriteTex: texture,
-          blending: THREE.AdditiveBlending,
-          });
+    constructor(scene, visible=false, type=CollisionEffect.STAR, count=50){
+        let geometry;
 
-          if (scene) scene.add(this);
+        switch(type){
+            case CollisionEffect.STAR:
+                geometry = createStar();
+                const scale = 0.2;
+                geometry.scale(scale, scale, scale);
+                break;
+        }
 
-          this.visible = visible;
-
-          function createStar(){
-            const canvas = document.createElement('canvas');
-            canvas.width = 64;
-            canvas.height = 64;
-            const context = canvas.getContext('2d');
+        const material = new THREE.MeshBasicMaterial();
     
-            const outerRadius = 31;
-            const innerRadius = 12;
-    
+        super(geometry, material, count);
+
+        scene.add(this);
+        this.visible = visible;
+
+        this.obj = new THREE.Object3D();
+
+        this.velocity = [];
+        this.acceleration = [];
+        this.positions = [];
+
+        const speed = 0.005;
+
+        for(let i=0; i<count; i++){
+            const v = new THREE.Vector3(this.random(-1,1) * speed, this.random(-1,1)*speed, this.random(-1,1)*speed );
+            this.acceleration.push(v);
+            this.velocity.push( new THREE.Vector3() );
+            this.positions.push( new THREE.Vector3() );
+        }
+
+        function createStar(){
+            const outerRadius = 0.3;
+            const innerRadius = outerRadius * 0.4;
+
             let outer = true;
             let move = true;
-            const center = 32;
-    
-            context.fillStyle = 'white';
 
-            context.beginPath();
-    
+            const shape = new THREE.Shape();
+            
             for(let i=0; i<10; i++){
                 const theta = (Math.PI * 2 / 10) * i;
                 const radius = (outer) ? outerRadius : innerRadius;
-                const x = Math.cos(theta) * radius + center;
-                const y = Math.sin(theta) * radius + center;
+                const x = Math.cos(theta) * radius;
+                const y = Math.sin(theta) * radius;
                 if (move){
-                    context.moveTo(x, y);
+                    shape.moveTo(x, y);
                     move = false;
                 }else{
-                    context.lineTo(x, y);
+                    shape.lineTo(x, y);
                 }
                 outer = !outer;
             }
+
+            const extrudeSettings = {
+                steps: 1,
+                depth: outerRadius*0.1,
+                bevelEnabled: false
+            }; 
     
-            context.closePath();
-            context.fill();
-    
-            return new THREE.CanvasTexture(canvas);
+            return new THREE.ExtrudeGeometry( shape, extrudeSettings );
         }
     }
 
+    random( min, max ){
+        return Math.random() * (max-min) + min;
+    }
+
     reset(pos){
-        this.position.copy(pos);
+        this.obj.position.set(0,0,0);
+        this.obj.updateMatrix();
 
-        const options = {
-            position: new THREE.Vector3(0,0,0),
-            positionRandomness: 0.0,
-            velocity: new THREE.Vector3(0,0,0),
-            velocityRandomness: 0.0,
-            acceleration: new THREE.Vector3(0,0,0),
-          
-            color: new THREE.Color(1.0,1.0,1.0),
-            endColor: new THREE.Color(1.0,0.0,0.0),
-            colorRandomness: 0.0,
-          
-            lifetime: 1,
-            fadeIn:0.001,
-            fadeOut:0.001,
-            size: 25,
-            sizeRandomness: 0.0,
-          }   
-        
-        const rand = (min,max) => Math.random()*(max-min) + min;
-        const speed = 0.5;
-
-        for(let i=0; i<this.PARTICLE_COUNT; i++){
-            options.velocity.set(rand(-1,1)*speed, rand(-1,1)*speed, rand(-1,1)*speed);
-            options.acceleration.copy(options.velocity).multiplyScalar(10);
-            this.spawnParticle(options);
+        for(let i=0; i<this.count; i++){
+            this.setMatrixAt(i, this.obj.matrix);
+            this.positions[i].copy(this.obj.position);
+            this.velocity[i].copy(this.obj.position);
         }
+
+        this.instanceMatrix.needsUpdate = true;
+        this.elapsedTime = 0;
 
         this.visible = true;
     }
 
     update(time, dt){
         if (this.visible){
-            super.update(time);
+            for(let i=0; i<this.count; i++){
+                this.velocity[i].add(this.acceleration[i]);
+                this.obj.position.copy(this.positions[i]).add(this.velocity[i]);
+                this.obj.updateMatrix();
+                this.positions[i].copy(this.obj.position);
+        
+                this.setMatrixAt(i, this.obj.matrix);
+            }
+            this.instanceMatrix.needsUpdate = true;
             this.elapsedTime += dt;
             if (this.elapsedTime > 1) this.visible = false;
         }

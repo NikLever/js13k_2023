@@ -1,4 +1,4 @@
-import { CollisionEffect } from './CollisionEffect.js';
+import { Player } from './Player.js';
 import { OrbitControls } from './OrbitControls.js';
 
 class App{
@@ -44,20 +44,42 @@ class App{
             if (event.repeat) return;
             console.log(`keydown ${event.code}`);
             switch(event.code){
-                case 'KeyE':
-                    if (this.effect){
-                        this.effect.reset( new THREE.Vector3() );
-                    }
+                case 'KeyD':
+                    this.knight.playAnim('drawaction');
+                    break;
+                case 'KeyU':
+                    this.knight.playAnim('useaction');
+                    break;
+                case 'ArrowUp':
+                    this.workingVector.set(0,1,1);
+                    break;
+                case 'ArrowDown':
+                    this.workingVector.set(0,1,-1);
+                    break;
+                case 'ArrowLeft':
+                    this.workingVector.set(1,1,0);
+                    break;
+                case 'ArrowRight':
+                    this.workingVector.set(-1,1,0);
                     break;
             }
           }, false);
+
+        document.addEventListener('keyup', (event) => {
+            console.log(`keyup ${event.code}`);
+            switch(event.code){
+                case 'KeyD':
+                case 'KeyU':
+                    this.knight.stopAnims();
+                    break;
+            }
+        }, false);
 
         this.renderer.setAnimationLoop( this.render.bind(this) );
 	}	
     
     initScene(){
-        this.time = 0;
-        this.effect = new CollisionEffect(this.scene);
+        this.knight = new Player(this.scene);
     } 
     
     resize(){
@@ -66,10 +88,12 @@ class App{
         this.renderer.setSize( window.innerWidth, window.innerHeight );  
     }
     
-	render( time ) {  
+	render( ) {  
         const dt = this.clock.getDelta();
-        this.time += dt;
-        if(this.effect) this.effect.update(time, dt);
+        if (this.knight){
+            this.knight.update(dt, null, this.camera);
+            this.knight.setDirection(this.workingVector);
+        }
         this.renderer.render( this.scene, this.camera );
     }
 }
