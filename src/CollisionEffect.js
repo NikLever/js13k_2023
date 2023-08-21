@@ -25,17 +25,8 @@ class CollisionEffect extends THREE.InstancedMesh{
         this.acceleration = [];
         this.positions = [];
 
-        const speed = 0.005;
-
-        for(let i=0; i<count; i++){
-            const v = new THREE.Vector3(this.random(-1,1) * speed, this.random(-1,1)*speed, this.random(-1,1)*speed );
-            this.acceleration.push(v);
-            this.velocity.push( new THREE.Vector3() );
-            this.positions.push( new THREE.Vector3() );
-        }
-
         function createStar(){
-            const outerRadius = 0.3;
+            const outerRadius = 1;
             const innerRadius = outerRadius * 0.4;
 
             let outer = true;
@@ -75,10 +66,20 @@ class CollisionEffect extends THREE.InstancedMesh{
         this.obj.position.set(0,0,0);
         this.obj.updateMatrix();
 
+        const speed = 0.03;
+
+        this.velocity = [];
+        this.acceleration = [];
+        this.positions = [];
+
+        this.position.copy(pos);
+
         for(let i=0; i<this.count; i++){
+            const v = new THREE.Vector3(this.random(-1,1) * speed, this.random(-1,1)*speed, this.random(-1,1)*speed );
+            this.velocity.push(v);
+            this.acceleration.push(v.clone().multiplyScalar(5));
+            this.positions.push( new THREE.Vector3() );
             this.setMatrixAt(i, this.obj.matrix);
-            this.positions[i].copy(this.obj.position);
-            this.velocity[i].copy(this.obj.position);
         }
 
         this.instanceMatrix.needsUpdate = true;
@@ -86,12 +87,17 @@ class CollisionEffect extends THREE.InstancedMesh{
 
         this.visible = true;
     }
-
+   
     update(time, dt){
         if (this.visible){
+            const scale = (this.elapsedTime<0.5) ? 1 : 1 - (this.elapsedTime-0.5)*2;
             for(let i=0; i<this.count; i++){
-                this.velocity[i].add(this.acceleration[i]);
-                this.obj.position.copy(this.positions[i]).add(this.velocity[i]);
+                this.obj.position.copy(this.positions[i].clone().add(this.velocity[i].clone().multiplyScalar(this.elapsedTime)).add(this.acceleration[i].clone().multiplyScalar(this.elapsedTime*this.elapsedTime)));
+                this.velocity[i].multiplyScalar(0.99);
+                this.acceleration[i].multiplyScalar(0.99);
+                this.acceleration[i].y -= dt * 0.05;
+                this.obj.rotation.z = this.elapsedTime * 6;
+                this.obj.scale.set(scale, scale, scale);
                 this.obj.updateMatrix();
                 this.positions[i].copy(this.obj.position);
         

@@ -19,6 +19,8 @@ class ForceField extends THREE.Group{
 
         this.time = 0;
         this.update(0);
+
+        this.visible = false;
     }
 
     update(dt){
