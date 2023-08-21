@@ -1,61 +1,50 @@
-class ForceField extends THREE.ShaderMaterial{
+import { Shield } from "./Models.js";
+
+class ForceField extends THREE.Group{
+    static radius = 0.8;
+    static height = 1.8;
+    static scale = 0.2;
+    static rows = 5;
+    static count = 8;
+
     constructor(){
-        const vshader = `
-            varying vec2 vUv;
+        super();
 
-            void main() {	
-            vUv = uv;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-            }
-            `
-            const fshader = `
-            #define PI 3.141592653589
-            #define PI2 6.28318530718
+        const shield = new Shield();
 
-            uniform float u_time;
+        this.obj = new THREE.Object3D();
+        const geometry = shield.geometry.clone().scale( ForceField.scale, ForceField.scale, ForceField.scale);
+        this.meshes = new THREE.InstancedMesh( geometry, shield.material, ForceField.count*ForceField.rows);
+        this.add(this.meshes);
 
-            varying vec2 vUv;
-
-            float polygon(vec2 pt, vec2 center, float radius, int sides, float rotate, float edge_thickness){
-            pt -= center;
-            
-            float theta = atan(pt.y, pt.x) + rotate;
-            float rad = PI2/float(sides);
-
-            float d = cos(floor(theta/rad + 0.5)*rad-theta)*length(pt);
-
-            return 1.0 - smoothstep(radius, radius + edge_thickness, d);
-            }
-
-            mat2 getRotationMatrix(float theta){
-            float s = sin(theta);
-            float c = cos(theta);
-            return mat2(c, -s, s, c);
-            }
-
-            void main (void)
-            {
-            vec2 center = vec2(0.5);
-            mat2 mat = getRotationMatrix(u_time);
-            vec2 pt = fract(vUv*13.0) - center;
-            pt = (mat * pt) + center;
-            float radius = 0.1;
-            if (polygon(pt, center, radius, 3, 0.0, 0.01)>0.0){
-                gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); 
-            }else{
-                gl_FragColor = vec4(1.0, 1.0, 1.0, 0.0);
-            }
-            }
-            `
-        super({
-            uniforms: { u_time: { value: 0 } },
-            vertexShader: vshader,
-            fragmentShader: fshader,
-            transparent: true       
-        });
+        this.time = 0;
+        this.update(0);
     }
 
     update(dt){
-        this.uniforms.u_time.value += dt;
+        this.time += dt;
+        
+        const PI2 = Math.PI * 2;
+        const inc = PI2/ForceField.count;
+        let index = 0;
+
+        for(let row=0; row<ForceField.rows; row++){
+            const n = (row % 2) ? 1 : -1;
+            const y = (ForceField.height/ForceField.rows) * row;
+            for(let i=0; i<ForceField.count; i++ ){
+                const t = (this.time * n) % PI2;
+                const r = (this.time * -1) % PI2;
+                const z = Math.sin(t+i*inc) * ForceField.radius;
+                const x = Math.cos(t+i*inc) * ForceField.radius;
+                this.obj.position.set(x,y,z);
+                this.obj.rotation.set(0,t,0);
+                this.obj.updateMatrix();
+				this.meshes.setMatrixAt( index ++, this.obj.matrix );
+            }
+        }
+
+        this.meshes.instanceMatrix.needsUpdate = true;
     }
 }
+
+export { ForceField };

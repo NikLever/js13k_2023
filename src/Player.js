@@ -1,5 +1,6 @@
 import { Knight } from "./Knight.js";
 import { LifeUI } from "./LifeUI.js";
+import { ForceField } from "./ForceField.js";
 import { SPBody } from "./SimplePhysics/SPBody.js";
 import { SPSphereCollider } from "./SimplePhysics/SPCollider.js";
 
@@ -14,6 +15,9 @@ class Player extends Knight{
         this.lifeUI.visible = false;
 
         this.world = world;
+
+        this.forceField = new ForceField();
+        this.root.add(this.forceField);
     }
 
     hit(amount=0.05){
@@ -30,6 +34,9 @@ class Player extends Knight{
             if (this.lifeDisplayTime>1) this.lifeUI.visible = false;
             cam.getWorldPosition(this.tmpVec)
             this.lifeUI.lookAt(this.tmpVec);
+        }
+        if (this.forceField.visible){
+            this.forceField.update(dt);
         }
         if (this.attacking && this.world){
             this.bladeEnd.getWorldPosition(this.tmpVec);
@@ -51,6 +58,7 @@ class Player extends Knight{
                 }
             }
         }
+
     }
 }
 

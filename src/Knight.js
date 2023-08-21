@@ -4,7 +4,7 @@ class Knight{
         this.model = this.createModel(colours, black);
         this.root.add(this.model);
         if (!black){
-            const light = new THREE.PointLight(0xFFFFFF, 8, 8)
+            const light = new THREE.PointLight(0xFFFFFF, 2, 8)
             light.position.set(0, 3, 1);
             this.root.add(light);
         }
