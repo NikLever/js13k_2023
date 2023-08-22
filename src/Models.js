@@ -59,6 +59,8 @@ f 8//21 7//21 5//21
 f 7//22 2//22 6//22
 `;*/
 
+import { CollisionEffect } from "./CollisionEffect.js";
+
 class Tree extends THREE.Group{
     constructor(type=0){
         super();
@@ -149,7 +151,7 @@ class Rock extends THREE.Mesh{
 }
 
 class Grail extends THREE.Group{
-    constructor(){
+    constructor(scene){
         super();
         const points = [
             { x: 0.3, y: 0 },
@@ -189,10 +191,29 @@ class Grail extends THREE.Group{
         spot.position.set(0, 3, 1);
         spot.lookAt( this.grail.position );
         this.add(spot);
+
+        scene.add(this);
+
+        this.effect = new CollisionEffect(scene, false, { 
+            shape: CollisionEffect.STAR,
+            count: 20,
+            velocity: new THREE.Vector3(0,0.06,0),
+            radius: 1
+        })
+    }
+
+    find(){
+        this.effect.reset(this.position);
     }
 
     reset(){
         this.grail.visible = true;
+    }
+
+    update(time, dt){
+        if (this.effect.visible){
+            this.effect.update(time, dt)
+        }
     }
 }
 

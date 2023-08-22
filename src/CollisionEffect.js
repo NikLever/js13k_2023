@@ -82,16 +82,18 @@ class CollisionEffect extends THREE.InstancedMesh{
         for(let i=0; i<this.count; i++){
             if (this.config.velocity){
                 v = this.config.velocity.clone();
+                v.y *= this.random(0.4, 1.1);
             }else{
                 v = new THREE.Vector3(this.random(-1,1) * speed, this.random(-1,1)*speed, this.random(-1,1)*speed );
             }
-            this.velocity.push(v);
-            this.acceleration.push(v.clone().multiplyScalar(5));
             if (this.config.radius){
                 p = new THREE.Vector3(Math.cos(inc*i)*this.config.radius, 0, Math.sin(inc*i)*this.config.radius);
+                v.add(p.clone().multiplyScalar(0.02));
             }else{
                 p = new THREE.Vector3();
             }
+            this.velocity.push(v);
+            this.acceleration.push(v.clone().multiplyScalar(5));
             this.positions.push( p );
             this.setMatrixAt(i, this.obj.matrix);
         }
