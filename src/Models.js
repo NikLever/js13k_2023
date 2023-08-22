@@ -184,6 +184,15 @@ class Grail extends THREE.Group{
         this.add(plinthColumn);
         this.add(plinthTop);
         this.add(this.grail);
+
+        const spot = new THREE.SpotLight(0xFFFFFF, 1, 5, Math.PI/6, 0.5);
+        spot.position.set(0, 3, 1);
+        spot.lookAt( this.grail.position );
+        this.add(spot);
+    }
+
+    reset(){
+        this.grail.visible = true;
     }
 }
 
@@ -529,6 +538,12 @@ class Gate extends THREE.Group{
         this.openaction.loop = THREE.LoopOnce;
 
         this.strength = 20;
+    }
+
+    reset(){
+        this.openaction.reset();
+        this.openaction.stop();
+        if (this.body) this.body.active = true;
     }
 
     hit(){

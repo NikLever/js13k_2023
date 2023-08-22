@@ -22,8 +22,6 @@ class App{
 
 		this.camera.position.set( 5.3, 10.5, 20 );
         this.camera.quaternion.set( -0.231, 0.126, 0.03, 0.964);
-
-        //this.createUI();
         
 		this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color( 0x050505 );
@@ -33,11 +31,12 @@ class App{
 		this.renderer = new THREE.WebGLRenderer({ antialias: true } );
 		this.renderer.setPixelRatio( window.devicePixelRatio );
 		this.renderer.setSize( window.innerWidth, window.innerHeight );
-       // this.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
+
+       const light = new THREE.DirectionalLight(0xFFFFFF, 0.3);
+       light.position.set(1,3,3);
+       this.scene.add(light);
         
 		container.appendChild( this.renderer.domElement );
-
-        this.tweens = [];
         
         this.initScene();
         this.initPhysics();
@@ -77,7 +76,7 @@ class App{
 		this.scene.fog = new THREE.Fog( 0x0a0a0a, 50, 100 );
 
 		// ground
-		const ground = new THREE.Mesh( new THREE.PlaneGeometry( 100, 1000 ), new THREE.MeshPhongMaterial( { color: 0x999999, depthWrite: true } ) );
+		const ground = new THREE.Mesh( new THREE.PlaneGeometry( 100, 1000 ), new THREE.MeshPhongMaterial( { color: 0x998866, depthWrite: true } ) );
 		ground.rotation.x = - Math.PI / 2;
 		this.scene.add( ground );
         ground.position.z = -400;
@@ -156,6 +155,7 @@ class App{
         this.knight = player;
         this.knight.body = body;
         this.world.addBody( body );
+        player.startPosition.copy(player.root.position);
         player.game = this;
 
         return body;
@@ -168,6 +168,7 @@ class App{
         body.mesh.userData.knight = enemy;
         body.mesh.name = 'Enemy';
         enemy.body = body;
+        enemy.startPosition.copy(pos);
         this.enemies.push(enemy);
         this.world.addBody( body );
         enemy.startPatrol();
@@ -222,7 +223,7 @@ class App{
             buildWall(positions, objects);
             const gate = new Gate( 1.375, 4.5 );
             pos.set( 2.75, 0, z );
-            createAABB(pos, gate);
+            gate.body = createAABB(pos, gate);
             self.gates.push(gate);
         }
 
@@ -323,6 +324,21 @@ class App{
         }
     }
 
+    resetGame(){
+        this.dolly.position.z = 10;
+        this.camera.position.set( 5.3, 10.5, 20 );
+        this.camera.quaternion.set( -0.231, 0.126, 0.03, 0.964);
+        this.camera.fov = 50;
+        this.knight.reset();
+        this.force.set(0,0,0);
+        this.resize();
+
+        this.enemies.forEach( enemy => enemy.reset() );
+        this.collectables.forEach( collectable => collectable.visible = true );
+        this.grail.reset();
+        this.gates.forEach( gate => gate.reset() );
+    }
+
     setupVR(){
         this.renderer.xr.enabled = true;
         
@@ -350,27 +366,12 @@ class App{
         const scope = this;
 
         this.renderer.xr.addEventListener( 'sessionend', function ( event ) {
-            scope.dolly.position.z = 10;
-            scope.camera.position.set( 5.3, 10.5, 20 );
-            scope.camera.quaternion.set( -0.231, 0.126, 0.03, 0.964);
-            scope.camera.fov = 50;
-            scope.player.position.set( 0, 0.5, 10);
-            scope.player.velocity.set(0,0,0);
-            scope.force.set(0,0,0);
-            scope.resize();
-            //scope.scoreUI.visible = false;
-            //scope.livesUI.visible = false;
+            scope.resetGame();
         } );
 
         this.renderer.xr.addEventListener( 'sessionstart', function ( event ) {
             scope.state = 'game';
             scope.startTime = scope.clock.elapsedTime;
-            scope.timerInterval = setInterval( scope.updateTime.bind(scope), 1000 );
-            //scope.lives = 5;
-            //scope.livesUI.showLives( scope.lives );
-            
-            //scope.scoreUI.visible = true;
-            //scope.livesUI.visible = true;
         } );
         
 
@@ -403,7 +404,6 @@ class App{
                     this.remove( grip );
                 }
                 scope.dolly.remove(this);
-                //this.remove( this.children[ 0 ] );
             } );
 
             this.root.add( controller );
@@ -418,34 +418,10 @@ class App{
         this.dolly.position.set(0, 8, 10);
         this.dolly.add( this.camera );
         this.scene.add( this.dolly );
-        //this.camera.remove( this.scoreUI.mesh );
-        //this.scoreUI.mesh.position.set(1, 2, -3 );
-        //this.camera.remove( this.livesUI.mesh );
-        //this.livesUI.mesh.position.set(-1, 2, -3 );
-        //this.dolly.add( this.scoreUI.mesh );
-        //this.dolly.add( this.livesUI.mesh )
         
         this.dummyCam = new THREE.Object3D();
         this.camera.add( this.dummyCam );
 
-    }
-
-    updateTime(){
-        const tm = 100 - Math.floor(this.clock.elapsedTime - this.startTime);
-        if (tm<0 && this.renderer.xr.getSession()){
-            this.renderer.xr.getSession().end();
-            clearInterval(this.timerInterval);
-            return;
-        }
-        const mins = Math.floor(tm/60);
-        const secs = tm - mins*60;
-        let minsStr = String(mins);
-        while (minsStr.length<2) minsStr = '0' + minsStr;
-        let secsStr = String(secs);
-        while (secsStr.length<2) secsStr = '0' + secsStr;
-        const str = minsStr + ':' + secsStr;
-        //this.scoreUI.clear( { x:120, w:136 } );
-        //this.scoreUI.showText( 120, 30, str, false);
     }
     
     buildGrip(){
@@ -489,6 +465,7 @@ class App{
 
 	render( time ) {  
         const dt = this.clock.getDelta();
+
         if (this.world){
             this.player.velocity.add( this.force.clone().multiplyScalar(dt * this.speed) );
 
@@ -515,14 +492,14 @@ class App{
                     enemy.update(dt, enemy.body.velocity);
                     const dist = enemy.root.position.distanceTo(this.knight.root.position);
                     if (dist<2){
-                        if (!enemy.state == enemy.STATES.ATTACK){
+                        if (enemy.state != enemy.STATES.ATTACK){
                             enemy.startAttack();
                         }
                     }else if (dist<10){
-                        if (!enemy.state == enemy.STATES.ATTACK){
+                        if (enemy.state != enemy.STATES.ATTACK){
                             enemy.startHone();
                         }
-                    }else if (!enemy.state == enemy.STATES.PATROL){
+                    }else if (enemy.state != enemy.STATES.PATROL){
                         enemy.startPatrol();
                     }
                 })

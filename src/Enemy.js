@@ -47,7 +47,13 @@ class Enemy extends Knight{
     reset(){
         this.model.visible = true;
         this.coffin.visible = false;
-        this.state = this.STATES.IDLE;
+        if (this.body && this.startPosition){
+            this.body.position.copy(this.startPosition);
+            this.body.velocity.set(0,0,0);
+            this.root.position.copy(this.startPosition);
+        }
+        this.life = 1;
+        this.startPatrol();
     }
 
     startPatrol(){
@@ -87,6 +93,7 @@ class Enemy extends Knight{
     }
 
     startHone(){
+        if (this.state==this.STATES.HONE) return;
         this.stopAnims();
         this.state = this.STATES.HONE;
     }

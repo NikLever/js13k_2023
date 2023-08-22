@@ -9,6 +9,8 @@ class Knight{
             this.root.add(light);
         }
         scene.add(this.root);
+        this.startPosition = new THREE.Vector3();
+        this.time = 0;
         this.life = 1;
     }
 
@@ -209,6 +211,13 @@ class Knight{
     update(dt, v){
         if (this.mixer) this.mixer.update(dt);
         if (v) this.setDirection(v);
+        if (this.body){
+            this.time += dt;
+            if (this.body.velocity.length()>0.5){
+                const scaleY = 1.0 - (Math.sin(this.time * 10)+1)*0.06;
+                this.model.scale.y = scaleY;
+            }
+        }
     }
 }
 

@@ -18,6 +18,18 @@ class Player extends Knight{
 
         this.forceField = new ForceField();
         this.root.add(this.forceField);
+
+        //this.sword.scale.y = 0.2;
+    }
+
+    reset(){
+        this.root.position.copy(this.startPosition);
+        this.body.position.copy(this.startPosition);
+        this.body.velocity.set(0,0,0);
+        this.life = 1;
+        this.forceField.visible = false;
+        this.sword.scale.y = 1;
+        this.sword.visible = true;
     }
 
     hit(amount=0.05){
