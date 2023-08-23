@@ -60,6 +60,7 @@ f 7//22 2//22 6//22
 `;*/
 
 import { CollisionEffect } from "./CollisionEffect.js";
+import { App } from "./index.js";
 
 class Tree extends THREE.Group{
     constructor(type=0){
@@ -192,6 +193,19 @@ class Grail extends THREE.Group{
         spot.lookAt( this.grail.position );
         this.add(spot);
 
+        const posTrack = new THREE.NumberKeyframeTrack( '.position[y]', [0, 0.5, 1.5], [1.5, 2, 2.2] );
+		const clip = new THREE.AnimationClip( null, 1.5, [ posTrack ] );
+        this.mixer = new THREE.AnimationMixer( this.grail );
+        this.action = this.mixer.clipAction(clip);
+        this.action.loop = THREE.LoopOnce;
+        this.action.clampWhenFinished = true;
+        this.mixer.addEventListener('finished', () => {
+            this.grail.visible = false;
+            if (this.app){
+                this.app.gameOver({ state:App.STATES.COMPLETE });
+            }
+        })
+
         scene.add(this);
 
         this.effect = new CollisionEffect(scene, false, { 
@@ -200,20 +214,29 @@ class Grail extends THREE.Group{
             velocity: new THREE.Vector3(0,0.06,0),
             radius: 1
         })
+
+        this.found = false;
     }
 
-    find(){
+    find(app){
+        if (this.found) return;
+        this.reset();
         this.effect.reset(this.position);
+        this.action.play();
+        this.app = app;
+        this.found = true;
     }
 
     reset(){
         this.grail.visible = true;
+        this.action.reset();
     }
 
     update(time, dt){
         if (this.effect.visible){
-            this.effect.update(time, dt)
+            this.effect.update(time, dt);
         }
+        this.mixer.update(dt);
     }
 }
 

@@ -1,6 +1,6 @@
 class LifeUI extends THREE.Mesh{
-    constructor(parent, pos, w=128, h=128){
-        const canvas = createOffscreenCanvas(w, h);
+    constructor(parent, pos, s=128){
+        const canvas = createOffscreenCanvas(s, s);
         
         const texture = new THREE.CanvasTexture(canvas);
         const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
@@ -11,8 +11,8 @@ class LifeUI extends THREE.Mesh{
         this.context = canvas.getContext('2d');
         this.context.save();
 
-        this.width = w;
-        this.height = h;
+        this.width = s;
+        this.height = s;
         this.texture = texture;
 
         this.position.copy(pos);
@@ -30,6 +30,8 @@ class LifeUI extends THREE.Mesh{
     }
 
     showLife(val=0.5){
+        if (val>1) val = 1;
+        if (val<0) val = 0;
         this.context.clearRect(0, 0, this.width, this.height)
         this.context.fillStyle = 'red';
         this.context.beginPath();
@@ -37,6 +39,8 @@ class LifeUI extends THREE.Mesh{
         this.context.fill();
         this.context.fillStyle = 'green';
         this.context.beginPath();
+        this.context.moveTo(this.width/2,this.height/2);
+        this.context.lineTo(this.width, this.height/2);
         this.context.arc(this.width/2, this.height/2, this.width/2, 0, 2 * Math.PI * val);
         this.context.fill();
         this.texture.needsUpdate = true;

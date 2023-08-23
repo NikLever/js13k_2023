@@ -26,7 +26,7 @@ class Enemy extends Knight{
             node.add(center);
         })
 
-        this.world;
+        this.world = world;
     }
 
     hit(amount=0.1){
@@ -92,8 +92,23 @@ class Enemy extends Knight{
         this.playAnim('drawaction');
     }
 
-    startHone(){
+    startHone(app){
         if (this.state==this.STATES.HONE) return;
+        //Check if player is visible
+        if (app){
+            app.tmpVec.copy(app.player.position).sub(this.body.position).normalize();
+            app.raycaster.set(this.body.position, app.tmpVec);
+            const intersects = app.raycaster.intersectObjects(app.scene.children);
+            if (intersects.length>0){
+                //If the first object found is not a child of the player then the player is behind an obstruction
+                const obj = intersects[0].object;
+                let found = false;
+                app.knight.model.traverse( child => {
+                    if (child == obj) found = true;
+                });
+                if (!found) return;
+            }
+        }
         this.stopAnims();
         this.state = this.STATES.HONE;
     }
@@ -101,14 +116,13 @@ class Enemy extends Knight{
     updateAttack(){
         if (this.attacking && this.world){
             this.bladeEnd.getWorldPosition(this.tmpVec);
-            const intersects = this.world.getPointCollisions(this.tmpVec, this.body, 0.3);
+            const intersects = this.world.getPointCollisions(this.tmpVec, this.body, 0.6);
             //console.log( 'checking intersects');
             if (intersects.length>0){
-                const body = intersects[0];
-                const obj = body.mesh;
-                console.log( `Enemy Sword hit ${obj.name}`);
-                if ( obj.name == 'Player' ){
-                    obj.hit();
+                const bodies = intersects.filter( intersect => intersect.mesh.name == 'Player' );
+                if (bodies.length>0){
+                    bodies[0].mesh.userData.player.hit();
+                    //console.log( `Enemy Sword hit ${obj.name}`);
                 }
             }
         }

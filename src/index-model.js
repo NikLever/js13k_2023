@@ -1,4 +1,4 @@
-import { Player } from './Player.js';
+import { Shield, Coffin, Heart, Gate, Grail } from './Models.js';
 import { OrbitControls } from './OrbitControls.js';
 
 class App{
@@ -44,42 +44,54 @@ class App{
             if (event.repeat) return;
             console.log(`keydown ${event.code}`);
             switch(event.code){
-                case 'KeyD':
-                    this.knight.playAnim('drawaction');
+                case 'KeyO':
+                    if (this.coffin){
+                        this.coffin.animate();
+                    }else if (this.gate){
+                        this.gate.openGate();
+                    }else if (this.grail){
+                        this.grail.find();
+                    }
                     break;
-                case 'KeyU':
-                    this.knight.playAnim('useaction');
-                    break;
-                case 'ArrowUp':
-                    this.workingVector.set(0,1,1);
-                    break;
-                case 'ArrowDown':
-                    this.workingVector.set(0,1,-1);
-                    break;
-                case 'ArrowLeft':
-                    this.workingVector.set(1,1,0);
-                    break;
-                case 'ArrowRight':
-                    this.workingVector.set(-1,1,0);
-                    break;
+
             }
           }, false);
-
-        document.addEventListener('keyup', (event) => {
-            console.log(`keyup ${event.code}`);
-            switch(event.code){
-                case 'KeyD':
-                case 'KeyU':
-                    this.knight.stopAnims();
-                    break;
-            }
-        }, false);
 
         this.renderer.setAnimationLoop( this.render.bind(this) );
 	}	
     
     initScene(){
-        this.knight = new Player(this.scene);
+        //this.gate = new Gate(1, 4);
+        //this.scene.add(this.gate);
+        //this.gate.openGate();
+        //const geometry = new THREE.SphereGeometry(0.7, 16, 8);
+        //const material = new THREE.MeshBasicMaterial({color:0xFFFFFF, wireframe: true});
+        //const mesh = new THREE.Mesh( geometry, material );
+        //mesh.position.y = 0.7;
+        //this.scene.add(mesh);
+        const model = 'grail';
+
+        switch(model){
+            case 'shield':
+                this.shield = new Shield();
+                this.scene.add(this.shield);
+                break;
+            case 'heart':
+                this.heart = new Heart();
+                this.scene.add(this.heart);
+                break;
+            case 'coffin':
+                this.coffin = new Coffin();
+                this.scene.add(this.coffin);
+                break;
+            case 'gate':
+                this.gate = new Gate(1, 2.5);
+                this.scene.add(this.gate);
+                break;
+            case 'grail':
+                this.grail = new Grail(this.scene);
+                break;
+        }
     } 
     
     resize(){
@@ -88,11 +100,18 @@ class App{
         this.renderer.setSize( window.innerWidth, window.innerHeight );  
     }
     
-	render( ) {  
+	render( time ) {  
         const dt = this.clock.getDelta();
-        if (this.knight){
-            this.knight.update(dt, null, this.camera);
-            this.knight.setDirection(this.workingVector);
+        if (this.shield){
+            this.shield.rotateY(0.01);
+        }else if (this.heart){
+            this.heart.rotateY(0.01);
+        }else if (this.coffin){
+            this.coffin.update(dt);
+        }else if(this.gate){
+            this.gate.update(dt);
+        }else if (this.grail){
+            this.grail.update(time, dt);
         }
         this.renderer.render( this.scene, this.camera );
     }

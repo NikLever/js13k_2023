@@ -10,6 +10,8 @@ import { DebugControls } from './DebugControls.js';
 //import ballSfx from "../assets/ball1.mp3";
 
 class App{
+    static STATES = { IDLE: 0, PLAYING: 1, PAUSED: 2, DEAD: 3, COMPLETE: 4 };
+
 	constructor(){
         const debug = true;
 
@@ -44,6 +46,7 @@ class App{
         this.tmpVec = new THREE.Vector3();
         this.tmpEuler = new THREE.Euler();
         this.tmpMat4 = new THREE.Matrix4();
+        this.raycaster = new THREE.Raycaster();
 
         this.force = new THREE.Vector3();
         this.speed = 3;
@@ -62,8 +65,30 @@ class App{
 	}	
 
     startGame(){
-        this.state = 'game';
+        this.state = App.STATES.PLAYING;
+        this.gameTime = 0;
         //this.sfx.click.play();
+    }
+
+    gameOver(options){
+        if (options){
+            const panel = document.getElementById('gameoverPanel');
+            const details = document.getElementById('details');
+            switch( options.state ){
+                case App.STATES.DEAD:
+                    details.innerHTML = `<P>You ran out of life ${this.player.position.distanceTo(this.grail.position).toFixed(0)} metres away from the Holy Grail</p>`
+                    break;
+                case App.STATES.COMPLETE:
+                    details.innerHTML = `<p>Congratulations</p><p>You found the grail in ${this.gameTime.toFixed(2)} seconds</p><p>Can you do better</p>`;
+                    break;
+            }
+            panel.style.display = 'block';
+        }
+        try{
+            this.renderer.xr.getSession().end();
+        }catch(e){
+            console.error(e);
+        }
     }
 
     random( min, max ){
@@ -150,8 +175,9 @@ class App{
         const player = new Player( this.scene, this.world );
         player.root.position.set( 0, 0.5, 10 );
         const body = new SPBody( player.root, new SPSphereCollider(0.5), 1 ); 
-        body.mesh.userData.knight = player;
+        body.mesh.userData.player = player;
         body.mesh.name = 'Player';
+        player.app = this;
         this.knight = player;
         this.knight.body = body;
         this.world.addBody( body );
@@ -165,7 +191,7 @@ class App{
         const enemy = new Enemy( this.scene, z, this.world );
         enemy.root.position.copy( pos );
         const body = new SPBody( enemy.root, new SPSphereCollider(0.5), 1 ); 
-        body.mesh.userData.knight = enemy;
+        body.mesh.userData.enemy = enemy;
         body.mesh.name = 'Enemy';
         enemy.body = body;
         enemy.startPosition.copy(pos);
@@ -288,9 +314,15 @@ class App{
                 this.createEnemy(pos.set(this.random(-8, 8), 0.5, z-10+this.random(-5, 5)), z-10);
             }
             if (z == -20){
-                this.grail = new Grail();
+                this.grail = new Grail(this.scene);
                 this.grail.position.set(0,0,z-10);
                 this.scene.add(this.grail);
+                const max = new THREE.Vector3( 1.5, 3, 1.5 ).multiplyScalar(0.5);
+                const min = max.clone().multiplyScalar(-1);
+
+                const body = new SPBody( this.grail, new SPAABBCollider(min,  max)); 
+    
+                this.world.addBody( body );
             }
         }
 
@@ -302,7 +334,10 @@ class App{
             const pos = this.player.position.clone();
             pos.y += 0.7
             this.effect.reset( pos );
-            this.player.life -= 0.1;
+            this.knight.hit(0.1);
+            if (this.knight.life<=0){
+                this.gameOver( { state: App.STATES.DEAD })
+            }
         }
         this.fixedStep = 1/60;
         this.effect = new CollisionEffect(this.scene, false);
@@ -473,6 +508,8 @@ class App{
         }
 
         if (this.renderer.xr.isPresenting){
+            this.gameTime += dt;
+
             if (this.debugControls==undefined){
                 if (this.useHeadsetOrientation){
                     this.tmpMat4.extractRotation( this.dummyCam.matrixWorld );
@@ -494,11 +531,12 @@ class App{
                     if (dist<2){
                         if (enemy.state != enemy.STATES.ATTACK){
                             enemy.startAttack();
+                        }else{
+                            this.tmpVec.copy(this.player.position).sub(enemy.body.position);
+                            enemy.setDirection(this.tmpVec);
                         }
                     }else if (dist<10){
-                        if (enemy.state != enemy.STATES.ATTACK){
-                            enemy.startHone();
-                        }
+                        enemy.startHone(this);
                     }else if (enemy.state != enemy.STATES.PATROL){
                         enemy.startPatrol();
                     }
@@ -517,17 +555,41 @@ class App{
         if ( this.effect && this.effect.visible ) this.effect.update(time, dt);
 
         if (this.collectables){
+            //let closest = 100000;
             this.collectables.forEach( collectable => {
+                if (!collectable.visible) return;
                 collectable.rotateY(0.01);
-            })
+                const dist = collectable.position.distanceTo(this.player.position);
+                //if (dist < closest) closest = dist;
+                if (dist<0.8){
+                    if (collectable instanceof Shield){
+                        this.knight.makeInvincible(10);
+                    }else if (collectable instanceof Heart){
+                        this.knight.hit(-1);
+                    }
+                    collectable.visible = false;
+                }
+            });
+            //console.log(`Closest collectable is ${closest.toFixed(2)} away`);
         }
     
         if (this.gates){
             this.gates.forEach( gate => gate.update(dt) );
         }
+
+        if (this.grail){
+            const dist = this.player.position.distanceTo(this.grail.position);
+            console.log('Distance to grail:' + dist.toFixed(2));
+            if (dist<2){
+                this.grail.find(this);
+            }
+            this.grail.update(time, dt);
+        }
        
         this.renderer.render( this.scene, this.camera );
     }
 }
+
+export { App };
 
 window.app = new App();  

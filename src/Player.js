@@ -3,6 +3,7 @@ import { LifeUI } from "./LifeUI.js";
 import { ForceField } from "./ForceField.js";
 import { SPBody } from "./SimplePhysics/SPBody.js";
 import { SPSphereCollider } from "./SimplePhysics/SPCollider.js";
+import { App } from './index.js';
 
 class Player extends Knight{
     constructor(scene, world){
@@ -11,13 +12,14 @@ class Player extends Knight{
         super(scene, colours);
 
         this.tmpVec = new THREE.Vector3();
-        this.lifeUI = new LifeUI(this.root, new THREE.Vector3(0, 2.6, 0));
+        this.lifeUI = new LifeUI(this.root, new THREE.Vector3(0, 2.6, 0), 64);
         this.lifeUI.visible = false;
 
         this.world = world;
 
         this.forceField = new ForceField();
         this.root.add(this.forceField);
+        this.invincibleDuration = 0;
 
         //this.sword.scale.y = 0.2;
     }
@@ -37,10 +39,25 @@ class Player extends Knight{
         this.life -= amount;
         this.lifeUI.showLife(this.life);
         this.lifeUI.visible = true;
+        if (this.app && this.life<=0) this.app.gameOver( { state: App.STATES.DEAD });
+    }
+
+    makeInvincible(time){
+        this.invincibleTime = 0;
+        this.invincibleDuration += time;
+        this.forceField.visible = true;
     }
 
     update(dt, v, cam){
         super.update(dt, v);
+
+        if (this.forceField.visible){
+            this.invincibleTime += dt;
+            if (this.invincibleTime>this.invincibleDuration){
+                this.invincibleDuration = 0;
+                this.forceField.visible = false;
+            }
+        }
         if (this.lifeUI.visible){
             this.lifeDisplayTime += dt;
             if (this.lifeDisplayTime>1) this.lifeUI.visible = false;
@@ -52,7 +69,7 @@ class Player extends Knight{
         }
         if (this.attacking && this.world){
             this.bladeEnd.getWorldPosition(this.tmpVec);
-            const intersects = this.world.getPointCollisions(this.tmpVec, this.body, 0.3);
+            const intersects = this.world.getPointCollisions(this.tmpVec, this.body, 0.6);
             //console.log( 'checking intersects');
             if (intersects.length>0){
                 const body = intersects[0];
@@ -65,7 +82,7 @@ class Player extends Knight{
                         };
                         break;
                     case 'Enemy':
-                        obj.hit();
+                        obj.userData.enemy.hit();
                         break;
                 }
             }
