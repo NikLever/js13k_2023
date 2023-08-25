@@ -17,6 +17,12 @@ class DebugControls{
                 case 'ArrowRight':
                     app.force.x = 1;
                     break;
+                case 'KeyA':
+                    app.knight.rotateStrength = 1;
+                    break;
+                case 'KeyD':
+                    app.knight.rotateStrength = -1;
+                    break;  
                 case 'KeyP':
                     panel = document.getElementById('openingPanel');
                     if (panel.style.display=='none'){
@@ -61,6 +67,11 @@ class DebugControls{
                 case 'ArrowRight':
                     app.force.x = 0;
                     break;
+                case 'KeyA':
+                case 'KeyD':
+                    app.knight.rotateStrength = 0;
+                    app.knight.rotateOnMove = true;
+                    break;  
                 case 'KeyS':
                     if (app.playAnim) app.playAnim('drawaction', true);
                     break;

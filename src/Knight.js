@@ -12,6 +12,7 @@ class Knight{
         this.startPosition = new THREE.Vector3();
         this.time = 0;
         this.life = 1;
+        this.rotateOnMove = true;
     }
 
     createModel(colours, black){
@@ -149,12 +150,14 @@ class Knight{
         root.add(blade);
         const bladeEnd = new THREE.Object3D();
         bladeEnd.name = 'bladeEnd';
-        bladeEnd.position.y = tipY;
+        bladeEnd.position.y = tipY/2;
         blade.add(bladeEnd);
-        /*const gTmp = new THREE.SphereGeometry(0.3, 10, 5);
-        const mTmp = new THREE.MeshBasicMaterial();
-        const tip = new THREE.Mesh(gTmp, mTmp);
-        bladeEnd.add(tip);*/
+        //debug
+        //const gTmp = new THREE.SphereGeometry(0.3, 10, 5);
+        //const mTmp = new THREE.MeshBasicMaterial({ wireframe: true });
+        //const tip = new THREE.Mesh(gTmp, mTmp);
+        //bladeEnd.add(tip);
+        //end DEBUG
         this.bladeEnd = bladeEnd;
         const handle = new THREE.Mesh( gHandle, mHandle );
         handle.matrix.fromArray([1,0,0,0,0,1,0,0,0,0,1,0,0,0.07401843451376103,0,1]);
@@ -176,7 +179,7 @@ class Knight{
     }
 
     setDirection( v ){
-        if (!v || v.length()==0) return;
+        if (!v || v.length()<0.1) return;
         const direction = v.clone().multiplyScalar(10);
         direction.y = 0;
         const target = this.root.position.clone().add(direction);
@@ -210,7 +213,7 @@ class Knight{
 
     update(dt, v){
         if (this.mixer) this.mixer.update(dt);
-        if (v) this.setDirection(v);
+        if (v && this.rotateOnMove) this.setDirection(v);
         if (this.body){
             this.time += dt;
             if (this.body.velocity.length()>0.5){

@@ -76,7 +76,7 @@ class VRButton{
             self.renderer.xr.setSession( session );
             self.stylizeElement( button, false, 12, true );
             
-            button.textContent = 'EXIT VR';
+            button.textContent = 'END GAME';
 
             currentSession = session;
             
@@ -90,8 +90,9 @@ class VRButton{
 
             self.stylizeElement( button, true, 12, true );
             button.style.display = '';
-            button.style.right = '20px';
-            button.style.width = '80px';
+            button.style.right = '50%';
+            button.style.width = '100px';
+            button.style.transform = 'translateX(-50%)';
             button.style.cursor = 'pointer';
             button.innerHTML = `<img src = "${svg}" alt="VR Cardboard" style="margin-left: 6px"/>`;
 
@@ -104,8 +105,11 @@ class VRButton{
         //
 
         button.style.display = '';
-        button.style.right = '20px';
-        button.style.width = '80px';
+        button.style.right = '50%';
+        button.style.width = '100px';
+        button.style.height = '56px';
+        button.style.bottom = '30px';
+        button.style.transform = 'translateX(50%)';
         button.style.cursor = 'pointer';
         button.innerHTML = `<img src = "${svg}" alt="VR Cardboard" style="margin-left: 6px"/>`;
         
@@ -113,7 +117,7 @@ class VRButton{
         button.onmouseenter = function () {
             
             button.style.fontSize = '12px'; 
-            button.textContent = (currentSession===null) ? 'ENTER VR' : 'EXIT VR';
+            button.textContent = (currentSession===null) ? 'PLAY GAME' : 'EXIT GAME';
             button.style.opacity = '1.0';
 
         };

@@ -470,7 +470,7 @@ class Shield extends THREE.Mesh{
 }
 
 class Coffin extends THREE.Mesh{
-    constructor(){
+    constructor(enemy){
         const shape = new THREE.Shape();
 
         shape.moveTo( 0.4, 0);
@@ -502,11 +502,17 @@ class Coffin extends THREE.Mesh{
         const pos = new THREE.NumberKeyframeTrack( '.position[y]', config.times, config.pos );
         const fade = new THREE.NumberKeyframeTrack( '.material.opacity', config.times, config.fade );
 
-		const clip = new THREE.AnimationClip( 'animatete', config.duration, [ rot, pos, fade ] );
+		const clip = new THREE.AnimationClip( 'animate', config.duration, [ rot, pos, fade ] );
         this.mixer = new THREE.AnimationMixer(this);
         this.action = this.mixer.clipAction(clip);
         this.action.clampWhenFinished = true;
         this.action.loop = THREE.LoopOnce;
+
+        if (enemy){
+            this.mixer.addEventListener('finished', () => {
+                enemy.respawn();
+            });
+        }
     }
 
     animate(){
@@ -587,6 +593,7 @@ class Gate extends THREE.Group{
     reset(){
         this.openaction.reset();
         this.openaction.stop();
+        this.strength = 20;
         if (this.body) this.body.active = true;
     }
 

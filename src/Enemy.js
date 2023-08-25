@@ -7,7 +7,7 @@ class Enemy extends Knight{
 
         super(scene, colours, true);
 
-        this.coffin = new Coffin();
+        this.coffin = new Coffin(this);
         this.coffin.visible = false;
         this.root.add(this.coffin);
         this.tmpVec = new THREE.Vector3();
@@ -15,6 +15,8 @@ class Enemy extends Knight{
         
         this.STATES = { IDLE: 0, PATROL: 1, HONE: 2, ATTACK: 3, DEAD: 4 };
         const center = new THREE.Vector3(0,0,z);
+        this.center = center;
+
         this.path = [
             new THREE.Vector3(-6, 0, -6),
             new THREE.Vector3(-6, 0, 6),
@@ -37,11 +39,24 @@ class Enemy extends Knight{
         }
     }
 
+    respawn(){
+        const offset = 40;
+        this.path.forEach( node => {
+            node.z += offset;
+        });
+        this.model.visible = true;
+        this.coffin.visible = false;
+        this.life = 1;
+        this.body.position.set(0, 0, this.startPosition.z + offset);
+        this.startPatrol();
+    }
+
     kill(){
         this.model.visible = false;
         this.coffin.visible = true;
         this.coffin.animate();
         this.state = this.STATES.DEAD;
+        this.stopAnims();
     }
 
     reset(){
@@ -87,9 +102,12 @@ class Enemy extends Knight{
         }
     }
 
-    startAttack(){
+    startAttack(app){
         this.state = this.STATES.ATTACK;
         this.playAnim('drawaction');
+        if (app){
+            app.knight.underAttack = true;
+        }
     }
 
     startHone(app){

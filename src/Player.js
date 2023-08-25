@@ -21,7 +21,14 @@ class Player extends Knight{
         this.root.add(this.forceField);
         this.invincibleDuration = 0;
 
+        this.rotateStrength = 0;
+
         //this.sword.scale.y = 0.2;
+    }
+
+    rotate(dir){
+        this.model.rotateY(dir * 0.1);
+        this.rotateOnMove = false;
     }
 
     reset(){
@@ -48,6 +55,10 @@ class Player extends Knight{
         this.forceField.visible = true;
     }
 
+    set underAttack( val ){
+        this.rotateOnMove = !val;
+    }
+
     update(dt, v, cam){
         super.update(dt, v);
 
@@ -58,6 +69,14 @@ class Player extends Knight{
                 this.forceField.visible = false;
             }
         }
+
+        if (Math.abs(this.rotateStrength)>0.1){
+            this.rotate(this.rotateStrength);
+            this.rotateStrength *= 0.9;
+        }else{
+            this.rotateStrength = 0;
+        }
+
         if (this.lifeUI.visible){
             this.lifeDisplayTime += dt;
             if (this.lifeDisplayTime>1) this.lifeUI.visible = false;
@@ -74,16 +93,18 @@ class Player extends Knight{
             if (intersects.length>0){
                 const body = intersects[0];
                 const obj = body.mesh;
-                console.log( `Player Sword hit ${obj.name}`);
-                switch( obj.name ){
-                    case 'Gate':
-                        if (obj.hit()){
-                            body.active = false;
-                        };
-                        break;
-                    case 'Enemy':
-                        obj.userData.enemy.hit();
-                        break;
+                const bodies = intersects.filter( intersect => intersect.mesh.name == 'Enemy' );
+                console.log( `Player Sword hit ${obj.name} ${bodies.length}`);
+                if (bodies.length>0){
+                    bodies.forEach( body => body.mesh.userData.enemy.hit(0.2));
+                }else{
+                    switch( obj.name ){
+                        case 'Gate':
+                            if (obj.hit()){
+                                body.active = false;
+                            };
+                            break;
+                    }
                 }
             }
         }
