@@ -317,7 +317,7 @@ class App{
             if (Math.random()>0.3){
                 this.createEnemy(pos.set(this.random(-8, 8), 0.5, z-10+this.random(-5, 5)), z-10);
             }
-            if (z == -20){
+            if (z == -400){
                 this.grail = new Grail(this.scene);
                 this.grail.position.set(0,0,z-10);
                 this.scene.add(this.grail);
