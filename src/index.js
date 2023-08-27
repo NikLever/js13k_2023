@@ -334,11 +334,17 @@ class App{
 
         this.player = this.createPlayer();
         //this.player.sfx = this.sfx.ball;
-        this.player.onCollision = () => {
+        this.player.onCollision = (type) => {
             const pos = this.player.position.clone();
-            pos.y += 0.7
+            pos.y += 0.7;
             this.effect.reset( pos );
-            this.knight.hit(0.1);
+            this.knight.hit(0.05);
+            if (type == 'Gate'){
+                this.knight.rotateOnMove = false;
+                setTimeout( () => {
+                    this.knight.rotateOnMove = true;
+                }, 100);
+            }
             if (this.knight.life<=0){
                 this.gameOver( { state: App.STATES.DEAD })
             }
@@ -395,7 +401,7 @@ class App{
         }
 
         function onSqueezeStart() {
-            scope.knight.playAnim('switchaction');  
+            //scope.knight.playAnim('switchaction');  
         }
 
         function onSqueezeEnd() {
@@ -499,11 +505,11 @@ class App{
             this.force.set( controller.gamepad.axes[2], 0, controller.gamepad.axes[3] );
             //console.log(`handleController: ${controller.gamepad.axes[2].toFixed(2)},  ${controller.gamepad.axes[3].toFixed(2)}`);
         }else if (controller.handedness == 'left'){
-            this.knight.rotateStrength = controller.gamepad.axes[2];
+            this.knight.rotateStrength = -controller.gamepad.axes[2];
         }
     }
 
-	render( time ) {  
+	render( time, frame ) {  
         const dt = this.clock.getDelta();
 
         if (this.world){

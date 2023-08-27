@@ -47,7 +47,8 @@ class Enemy extends Knight{
         this.model.visible = true;
         this.coffin.visible = false;
         this.life = 1;
-        this.body.position.set(0, 0, this.startPosition.z + offset);
+        this.startPosition.z += offset;
+        this.body.position.set(0, 0, this.startPosition.z);
         this.startPatrol();
     }
 
