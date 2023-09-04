@@ -42,6 +42,7 @@ class Player extends Knight{
     }
 
     hit(amount=0.05){
+        if (this.forceField.visible) return;
         this.lifeDisplayTime = 0;
         this.life -= amount;
         this.lifeUI.showLife(this.life);
@@ -56,11 +57,14 @@ class Player extends Knight{
     }
 
     set underAttack( val ){
+        if (this.skipAttack) return;
         this.rotateOnMove = !val;
     }
 
     update(dt, v, cam){
         super.update(dt, v);
+
+        //console.log('rotateOnMove = ' + this.rotateOnMove);
 
         if (this.forceField.visible){
             this.invincibleTime += dt;
@@ -72,7 +76,7 @@ class Player extends Knight{
 
         if (Math.abs(this.rotateStrength)>0.1){
             this.rotate(this.rotateStrength);
-            this.rotateStrength *= 0.9;
+            this.rotateStrength *= 0.8;
         }else{
             this.rotateStrength = 0;
         }
@@ -88,15 +92,15 @@ class Player extends Knight{
         }
         if (this.attacking && this.world){
             this.bladeEnd.getWorldPosition(this.tmpVec);
-            const intersects = this.world.getPointCollisions(this.tmpVec, this.body, 0.6);
+            const intersects = this.world.getPointCollisions(this.tmpVec, this.body, 0.8);
             //console.log( 'checking intersects');
             if (intersects.length>0){
                 const body = intersects[0];
                 const obj = body.mesh;
                 const bodies = intersects.filter( intersect => intersect.mesh.name == 'Enemy' );
-                console.log( `Player Sword hit ${obj.name} ${bodies.length}`);
+                //console.log( `Player Sword hit ${obj.name} ${bodies.length}`);
                 if (bodies.length>0){
-                    bodies.forEach( body => body.mesh.userData.enemy.hit(0.2));
+                    bodies.forEach( body => body.mesh.userData.enemy.hit(0.5));
                 }else{
                     switch( obj.name ){
                         case 'Gate':

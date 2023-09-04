@@ -2,6 +2,8 @@ import { Knight } from "./Knight.js";
 import { Coffin } from "./Models.js";
 
 class Enemy extends Knight{
+    static STATES = { IDLE: 0, PATROL: 1, HONE: 2, ATTACK: 3, DEAD: 4 };
+
     constructor(scene, z, world){
         const colours = [0x0A0A0A, 0xC8AD8D, 0x3B3845, 0x423D4D, 0x000000, 0x999999, 0x50545E, 0x706E3E ];
 
@@ -13,26 +15,30 @@ class Enemy extends Knight{
         this.tmpVec = new THREE.Vector3();
         this.prevPos = new THREE.Vector3();
         
-        this.STATES = { IDLE: 0, PATROL: 1, HONE: 2, ATTACK: 3, DEAD: 4 };
         const center = new THREE.Vector3(0,0,z);
         this.center = center;
+        this.curZ = z;
 
+        this.pathV = new THREE.Vector3();
+        this.initPath();
+
+        this.world = world;
+    }
+
+    initPath(){
         this.path = [
             new THREE.Vector3(-6, 0, -6),
             new THREE.Vector3(-6, 0, 6),
             new THREE.Vector3( 6, 0, 6),
             new THREE.Vector3( 6, 0, -6)
         ];
-        this.pathV = new THREE.Vector3();
         this.path.forEach( node => {
-            node.add(center);
+            node.add(this.center);
         })
-
-        this.world = world;
     }
 
     hit(amount=0.1){
-        if (this.state == this.STATES.DEAD) return;
+        if (this.state == Enemy.STATES.DEAD) return;
         this.life -= amount;
         if (this.life<=0){
             this.kill();
@@ -41,14 +47,16 @@ class Enemy extends Knight{
 
     respawn(){
         const offset = 40;
+
         this.path.forEach( node => {
-            node.z += offset;
+            node.z -= offset;
         });
         this.model.visible = true;
         this.coffin.visible = false;
         this.life = 1;
-        this.startPosition.z += offset;
-        this.body.position.set(0, 0, this.startPosition.z);
+        this.curZ -= offset;
+        this.body.position.set(0, 0, this.curZ);
+        this.body.mesh.position.copy(this.body.position);
         this.startPatrol();
     }
 
@@ -56,7 +64,7 @@ class Enemy extends Knight{
         this.model.visible = false;
         this.coffin.visible = true;
         this.coffin.animate();
-        this.state = this.STATES.DEAD;
+        this.state = Enemy.STATES.DEAD;
         this.stopAnims();
     }
 
@@ -68,14 +76,16 @@ class Enemy extends Knight{
             this.body.velocity.set(0,0,0);
             this.root.position.copy(this.startPosition);
         }
+        this.curZ = this.center.z;
         this.life = 1;
+        this.initPath();
         this.startPatrol();
     }
 
     startPatrol(){
         this.stopAnims();
         this.pathIndex = 0;
-        this.state = this.STATES.PATROL;
+        this.state = Enemy.STATES.PATROL;
         this.root.getWorldPosition(this.tmpVec);
         this.tmpVec.sub(this.path[this.pathIndex]).normalize().multiplyScalar(3).negate();
         this.body.velocity.copy(this.tmpVec);
@@ -104,7 +114,7 @@ class Enemy extends Knight{
     }
 
     startAttack(app){
-        this.state = this.STATES.ATTACK;
+        this.state = Enemy.STATES.ATTACK;
         this.playAnim('drawaction');
         if (app){
             app.knight.underAttack = true;
@@ -112,7 +122,7 @@ class Enemy extends Knight{
     }
 
     startHone(app){
-        if (this.state==this.STATES.HONE) return;
+        if (this.state==Enemy.STATES.HONE) return;
         //Check if player is visible
         if (app){
             app.tmpVec.copy(app.player.position).sub(this.body.position).normalize();
@@ -129,7 +139,7 @@ class Enemy extends Knight{
             }
         }
         this.stopAnims();
-        this.state = this.STATES.HONE;
+        this.state = Enemy.STATES.HONE;
     }
 
     updateAttack(){
@@ -150,15 +160,15 @@ class Enemy extends Knight{
     update(dt, v){
         super.update(dt, v);
         switch(this.state){
-            case this.STATES.IDLE:
+            case Enemy.STATES.IDLE:
                 break;
-            case this.STATES.PATROL:
+            case Enemy.STATES.PATROL:
                 this.updatePatrol();
                 break;
-            case this.STATES.ATTACK:
+            case Enemy.STATES.ATTACK:
                 this.updateAttack();
                 break;
-            case this.STATES.DEAD:
+            case Enemy.STATES.DEAD:
                 this.coffin.update(dt);
                 break;
         }

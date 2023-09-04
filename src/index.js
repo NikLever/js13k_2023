@@ -7,7 +7,7 @@ import { Tree, Rock, RockFace, Tower, Shield, Heart, Grail, Gate } from './Model
 import { Player } from './Player.js';
 import { Enemy  } from './Enemy.js';
 import { DebugControls } from './DebugControls.js';
-//import ballSfx from "../assets/ball1.mp3";
+import ballSfx from "../assets/ball1.mp3";
 
 class App{
     static STATES = { IDLE: 0, PLAYING: 1, PAUSED: 2, DEAD: 3, COMPLETE: 4 };
@@ -70,7 +70,7 @@ class App{
         this.startTime = this.clock.elapsedTime;
         const panel = document.getElementById('openingPanel');
         panel.style.display = 'none';
-        //this.sfx.click.play();
+        this.sfx.ball.play();
     }
 
     gameOver(options){
@@ -115,11 +115,10 @@ class App{
         this.camera.add( listener );
 
         this.sfx = {};
-        //this.sfx.ball = this.loadSound(ballSfx, listener, 0.1);
+        this.sfx.ball = this.loadSound(ballSfx, listener, 0.1);
 
         let z = 40;
         const width = 12;
-        const maxTreeType = 2;
         const offset = new THREE.Vector3();
         const rock = new Rock();
         const tree = new Tree();
@@ -187,6 +186,9 @@ class App{
         this.world.addBody( body );
         player.startPosition.copy(player.root.position);
         player.game = this;
+        this.follower = new THREE.Object3D();
+        this.follower.position.set(0, 5, 8);
+        body.mesh.add(this.follower);
 
         return body;
     }
@@ -199,6 +201,7 @@ class App{
         body.mesh.name = 'Enemy';
         enemy.body = body;
         enemy.startPosition.copy(pos);
+        enemy.orgZ = z;
         this.enemies.push(enemy);
         this.world.addBody( body );
         enemy.startPatrol();
@@ -333,7 +336,7 @@ class App{
         this.collectables.forEach( collectable => { this.scene.add(collectable) } );
 
         this.player = this.createPlayer();
-        //this.player.sfx = this.sfx.ball;
+        this.player.sfx = this.sfx.ball;
         this.player.onCollision = (type) => {
             const pos = this.player.position.clone();
             pos.y += 0.7;
@@ -341,9 +344,11 @@ class App{
             this.knight.hit(0.05);
             if (type == 'Gate'){
                 this.knight.rotateOnMove = false;
+                this.knight.skipAttack = true;
                 setTimeout( () => {
                     this.knight.rotateOnMove = true;
-                }, 100);
+                    this.knight.skipAttack = false;
+                }, 1000);
             }
             if (this.knight.life<=0){
                 this.gameOver( { state: App.STATES.DEAD })
@@ -389,7 +394,7 @@ class App{
         
         const button = new VRButton( this.renderer );
         button.onClick = () => {
-            //this.sfx.ball.play();
+            this.sfx.ball.play();
         }
         
         function onSelectStart() {
@@ -400,13 +405,13 @@ class App{
             scope.knight.stopAnims();    
         }
 
-        function onSqueezeStart() {
+       /* function onSqueezeStart() {
             //scope.knight.playAnim('switchaction');  
         }
 
         function onSqueezeEnd() {
             scope.knight.stopAnims();    
-        }
+        }*/
 
         const scope = this;
 
@@ -430,15 +435,15 @@ class App{
             const controller = this.renderer.xr.getController( i );
             controller.addEventListener( 'selectstart', onSelectStart );
             controller.addEventListener( 'selectend', onSelectEnd );
-            controller.addEventListener( 'squeezestart', onSqueezeStart );
-            controller.addEventListener( 'squeezeend', onSqueezeEnd );
+            //controller.addEventListener( 'squeezestart', onSqueezeStart );
+            //controller.addEventListener( 'squeezeend', onSqueezeEnd );
             controller.addEventListener( 'connected', ( event ) => {
                 const mesh = this.buildController(event.data, i);
                 mesh.scale.z = 0;
                 controller.add( mesh );
                 controller.gamepad = event.data.gamepad;
                 controller.handedness = event.data.handedness;
-                console.log(`controller connected ${controller.handedness}`);
+                //console.log(`controller connected ${controller.handedness}`);
             } );
             
             controller.addEventListener( 'disconnected', function () {
@@ -452,11 +457,11 @@ class App{
 
             this.root.add( controller );
 
-            const grip = this.renderer.xr.getControllerGrip( i );
+            /*const grip = this.renderer.xr.getControllerGrip( i );
             grip.add( this.buildGrip( ) );
-            controller.add( grip );
+            controller.add( grip );*/
 
-            this.controllers.push({controller, grip});
+            this.controllers.push({controller});// grip});
         }
         
         this.dolly.position.set(0, 8, 10);
@@ -468,12 +473,12 @@ class App{
 
     }
     
-    buildGrip(){
+    /*buildGrip(){
         const geometry = new THREE.CylinderGeometry(0.02, 0.015, 0.12, 16, 1);
         geometry.rotateX( -Math.PI/2 );
         const material = new THREE.MeshStandardMaterial( { color: 0xdddddd, roughness: 1 } );
         return new THREE.Mesh(geometry, material);
-    }
+    }*/
 
     buildController( data ) {
         let geometry, material;
@@ -530,22 +535,24 @@ class App{
                     this.controllers.forEach( (obj) => this.handleController(obj.controller));
                 }
             }
-            this.dolly.position.z = this.player.position.z + 10;
+            //this.dolly.position.z = this.player.position.z + 10;
+            this.follower.getWorldPosition(this.tmpVec);
+            this.dolly.position.lerp(this.tmpVec, 0.1);
             
             if ( this.enemies ){
                 this.knight.underAttack = false;
                 this.enemies.forEach( enemy => {
-                    if (enemy.state == enemy.STATES.DEAD){
+                    if (enemy.state == Enemy.STATES.DEAD){
                         enemy.update(dt);
                         return;
                     }
-                    if (enemy.state == enemy.STATES.HONE){
+                    if (enemy.state == Enemy.STATES.HONE){
                         enemy.body.velocity.copy(enemy.root.position).sub(this.knight.root.position).normalize().multiplyScalar(this.speed*0.7).negate();
                     }
                     enemy.update(dt, enemy.body.velocity);
                     const dist = enemy.root.position.distanceTo(this.knight.root.position);
                     if (dist<2){
-                        if (enemy.state != enemy.STATES.ATTACK){
+                        if (enemy.state != Enemy.STATES.ATTACK){
                             enemy.startAttack(this);
                         }else{
                             this.tmpVec.copy(this.player.position).sub(enemy.body.position);
@@ -554,7 +561,7 @@ class App{
                         }
                     }else if (dist<10){
                         enemy.startHone(this);
-                    }else if (enemy.state != enemy.STATES.PATROL){
+                    }else if (enemy.state != Enemy.STATES.PATROL){
                         enemy.startPatrol();
                     }
                 })

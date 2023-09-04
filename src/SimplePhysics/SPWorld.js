@@ -101,7 +101,9 @@ class SPWorld{
                                     const offset = normal.clone().multiplyScalar(body.collider.radius + slop);
                                     body.position = pt.clone().add(offset);
                         
-                                    if (body.onCollision) body.onCollision();
+                                    if (body.onCollision){
+                                        body.onCollision(body2.mesh.name);
+                                    }
                                     
                                     const dir = body2.collider.whichDirection( normal.negate() );
                                     //RIGHT 0, LEFT 1, UP 2, DOWN 3, IN 4, OUT 5

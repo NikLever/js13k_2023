@@ -92,7 +92,7 @@ class VRButton{
             button.style.display = '';
             button.style.right = '50%';
             button.style.width = '100px';
-            button.style.transform = 'translateX(-50%)';
+            button.style.transform = 'translateX(50%)';
             button.style.cursor = 'pointer';
             button.innerHTML = `<img src = "${svg}" alt="VR Cardboard" style="margin-left: 6px"/>`;
 

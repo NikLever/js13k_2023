@@ -31,6 +31,9 @@ class DebugControls{
                         panel.style.display = 'none';
                     }
                     break;
+                case 'KeyR':
+                    app.enemies[0].respawn();
+                    break;
                 case 'KeyK':
                     app.enemies[0].kill();
                     break;
