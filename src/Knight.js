@@ -179,7 +179,7 @@ class Knight{
     }
 
     setDirection( v ){
-        if (!v || v.length()<0.1) return;
+        if (!v || v.length()<0.1 || (this.rotateStrength && this.rotateStrength>0.1)) return;
         const direction = v.clone().multiplyScalar(10);
         direction.y = 0;
         const target = this.root.position.clone().add(direction);

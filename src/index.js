@@ -88,11 +88,8 @@ class App{
             }
             panel.style.display = 'block';
         }
-        try{
-            this.renderer.xr.getSession().end();
-        }catch(e){
-            console.error(e);
-        }
+       
+        this.vrButton.endSession();
     }
 
     random( min, max ){
@@ -393,6 +390,8 @@ class App{
         this.renderer.xr.enabled = true;
         
         const button = new VRButton( this.renderer );
+        this.vrButton = button;
+
         button.onClick = () => {
             this.sfx.ball.play();
         }

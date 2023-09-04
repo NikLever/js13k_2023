@@ -79,6 +79,7 @@ class VRButton{
             button.textContent = 'END GAME';
 
             currentSession = session;
+            self.session = session;
             
             if (self.onSessionStart !== undefined) self.onSessionStart();
 
@@ -97,6 +98,7 @@ class VRButton{
             button.innerHTML = `<img src = "${svg}" alt="VR Cardboard" style="margin-left: 6px"/>`;
 
             currentSession = null;
+            self.session = null;
             
             if (self.onSessionEnd !== undefined) self.onSessionEnd();
 
@@ -144,8 +146,11 @@ class VRButton{
                 navigator.xr.requestSession( self.sessionMode, self.sessionInit ).then( onSessionStarted );
 
             } else {
-
-                currentSession.end();
+                try{
+                    currentSession.end();
+                }catch(e){
+                    console.error(e);
+                }
 
             }
 
@@ -153,6 +158,13 @@ class VRButton{
 
         };
 
+    }
+
+    endSession(){
+        if (this.session){
+            this.session.end();
+            this.session = null;
+        }
     }
 
     disableButton(button) {
