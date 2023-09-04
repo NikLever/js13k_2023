@@ -28,13 +28,13 @@ class App{
 		this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color( 0x050505 );
 
-		this.scene.add( new THREE.HemisphereLight( 0xffffff, 0x404040, 0.45 ) );
+		this.scene.add( new THREE.HemisphereLight( 0xffffff, 0x404040, 1) );
 			
 		this.renderer = new THREE.WebGLRenderer({ antialias: true } );
 		this.renderer.setPixelRatio( window.devicePixelRatio );
 		this.renderer.setSize( window.innerWidth, window.innerHeight );
 
-       const light = new THREE.DirectionalLight(0xFFFFFF, 0.3);
+       const light = new THREE.DirectionalLight(0xFFFFFF, 1);
        light.position.set(1,3,3);
        this.scene.add(light);
         

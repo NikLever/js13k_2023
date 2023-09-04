@@ -21,6 +21,7 @@ module.exports = merge(common, {
   },
   output: {
     path: path.join(process.cwd(), "dist"),
+    publicPath: '',
   },
   plugins: [
     new InlineChunkHtmlPlugin(HtmlWebpackPlugin, [".js"]),
